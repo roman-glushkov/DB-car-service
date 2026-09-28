@@ -1,421 +1,267 @@
 const pages = {
-  dashboard: { title: "Главная", render: dashboard },
-  orders: { title: "Заказы", render: orders },
-  clients: { title: "Клиенты", render: clients },
-  cars: { title: "Машины", render: cars },
-  employees: { title: "Сотрудники", render: employees },
-  works: { title: "Работы", render: works },
-  parts: { title: "Запчасти", render: parts },
-  payments: { title: "Оплаты", render: payments },
-  stats: { title: "Статистика", render: stats },
+  dashboard: { title: 'Главная', render: dashboard },
+  orders: { title: 'Заказы', render: orders },
+  clients: { title: 'Клиенты', render: clients },
+  cars: { title: 'Машины', render: cars },
+  employees: { title: 'Сотрудники', render: employees },
+  works: { title: 'Работы', render: works },
+  parts: { title: 'Запчасти', render: parts },
+  payments: { title: 'Оплаты', render: payments },
+  stats: { title: 'Статистика', render: stats },
 };
+
 const imgs = [
-  "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1525609004556-c46c7cf7cfca?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=800&q=80",
+  'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1525609004556-c46c7cf7cfca?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=800&q=80',
 ];
 const A = (i) => imgs[i % imgs.length];
-function shell(inner, sub = "") {
-  return `<div class="page"><div class="page-head"><div><div class="eyebrow">${
-    sub || "рабочее место администратора"
-  }</div><h1>${
-    pages[current].title
-  }</h1><div class="page-sub">Управление автосервисом · данные демонстрационные</div></div>${
-    current !== "stats"
-      ? `<button class="btn btn-lime" onclick="openCreate()">＋ Добавить</button>`
-      : ""
-  }</div>${inner}</div>`;
+let current = 'dashboard';
+let cache = { clients: [], cars: [], employees: [], statuses: [], works: [], parts: [], orders: [] };
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
 }
-function dashboard() {
-  return `<div class="hero-mini"><div><h2>Доброе утро, Алексей</h2><p>Сегодня в работе 12 заказов. Два автомобиля готовы к выдаче.</p></div><div class="quick-actions"><button class="btn btn-lime" onclick="openCreate()">＋ Новый заказ</button><button class="btn btn-light" onclick="showToast('Открыт поиск')">⌕ Найти автомобиль</button></div></div>
-<div class="cards">
-${metric("Активные заказы", "12", "↗ 8%", "vs. прошлой недели", "▤")}
-${metric("Выручка за месяц", "684 320 ₽", "↗ 12,4%", "vs. август", "₽")}
-${metric("Автомобили", "186", "+14", "за текущий месяц", "▣")}
-${metric("Низкий остаток", "4", "Требуют внимания", "запчасти", "◇")}
-</div>
-<div class="grid2">
-<div class="panel"><div class="panel-head"><div class="panel-title">Последние заказы</div><button class="panel-link" onclick="go('orders')">Все заказы →</button></div>${orderTable(
-    true
-  )}</div>
-<div class="panel"><div class="panel-head"><div class="panel-title">Сегодня</div><span class="panel-link">28 сентября</span></div><div class="schedule">
-${event("09:00", "Диагностика", "BMW X5 · А991МР12", "Диагностика")}
-${event("11:30", "Замена масла", "Kia Rio · К483КХ12", "В работе")}
-${event("13:00", "Выдача автомобиля", "Toyota Camry · Т214РВ12", "Готов")}
-${event("15:30", "Шиномонтаж", "Audi A6 · М712ТА12", "Новый")}
-</div></div></div>
-<div class="panel section-space"><div class="panel-head"><div><div class="panel-title">Недавние работы</div><div class="page-sub">Фото-заглушки для будущей истории выполненных работ</div></div><button class="panel-link" onclick="go('works')">Справочник →</button></div>
-<div class="photo-strip">${[0, 1, 2, 3, 4]
-    .map(
-      (x, i) =>
-        `<div class="work-photo" style="background-image:url('${A(
-          i + 2
-        )}')"><span class="photo-label">${
-          [
-            "Замена тормозов",
-            "ТО и масло",
-            "Диагностика",
-            "Кузовные работы",
-            "Подвеска",
-          ][i]
-        }</span></div>`
-    )
-    .join("")}</div></div>`;
+function money(v) { return `${Number(v || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`; }
+function dateFmt(v, withTime = false) {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return esc(v);
+  return d.toLocaleString('ru-RU', withTime ? { dateStyle: 'short', timeStyle: 'short' } : { dateStyle: 'short' });
+}
+function statusClass(s) {
+  if (s === 'Готов' || s === 'Выдан') return 's-done';
+  if (s === 'В работе') return 's-work';
+  if (s === 'Диагностика') return 's-diag';
+  if (s === 'Ожидание запчастей' || s === 'Отменён') return 's-wait';
+  return 's-new';
+}
+async function api(url, options = {}) {
+  const opts = { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } };
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+async function loadRefs() {
+  const [clients, cars, employees, statuses, works, parts, orders] = await Promise.all([
+    api('/api/clients'), api('/api/cars'), api('/api/employees'), api('/api/statuses'),
+    api('/api/work-types'), api('/api/parts'), api('/api/orders')
+  ]);
+  Object.assign(cache, { clients, cars, employees, statuses, works, parts, orders });
+}
+function shell(inner, sub = '') {
+  return `<div class="page"><div class="page-head"><div><div class="eyebrow">${esc(sub || 'рабочее место администратора')}</div><h1>${esc(pages[current].title)}</h1><div class="page-sub">Управление автосервисом · данные из MariaDB</div></div>${current !== 'stats' ? `<button class="btn btn-lime" onclick="openCreate()">＋ Добавить</button>` : ''}</div>${inner}</div>`;
 }
 function metric(t, v, c, b, ic) {
-  return `<div class="metric"><div class="metric-top"><span>${t}</span><span class="metric-icon">${ic}</span></div><div class="metric-value">${v}</div><div class="metric-bottom"><span class="${
-    c.includes("↗") ? "up" : ""
-  }">${c}</span> ${b}</div></div>`;
+  return `<div class="metric"><div class="metric-top"><span>${esc(t)}</span><span class="metric-icon">${esc(ic)}</span></div><div class="metric-value">${esc(v)}</div><div class="metric-bottom"><span>${esc(c)}</span> ${esc(b)}</div></div>`;
 }
-function event(t, a, c, s) {
-  return `<div class="event"><div class="event-time">${t}</div><div class="event-line"><strong>${a}</strong><span>${c}</span><span class="status ${
-    s === "Готов"
-      ? "s-done"
-      : s === "В работе"
-      ? "s-work"
-      : s === "Диагностика"
-      ? "s-diag"
-      : "s-new"
-  }">${s}</span></div></div>`;
+function emptyRow(cols, text='Пока нет данных') { return `<tr><td colspan="${cols}" class="empty-cell">${esc(text)}</td></tr>`; }
+
+async function dashboard() {
+  const d = await api('/api/dashboard');
+  const rows = d.recent.length ? d.recent.map((r,i) => `<tr>
+    <td><div class="car-cell"><img class="car-thumb" src="${A(i)}"><div class="car-name"><strong>${esc(r.license_plate || 'Без номера')}</strong><span>${esc(r.brand)} ${esc(r.model)}</span></div></div></td>
+    <td>${esc(r.client_name)}</td><td><span class="status ${statusClass(r.status_name)}">${esc(r.status_name)}</span></td>
+    <td><b>${money(r.order_total)}</b></td><td><button class="tiny-btn" onclick="openOrder(${r.order_id})">Открыть</button></td></tr>`).join('') : emptyRow(5);
+  return `<div class="hero-mini"><div><h2>AutoPro подключён к базе</h2><p>Данные на этой странице формируются запросами к MariaDB.</p></div><div class="quick-actions"><button class="btn btn-lime" onclick="openCreate()">＋ Новый заказ</button><button class="btn btn-light" onclick="go('cars')">⌕ Найти автомобиль</button></div></div>
+  <div class="cards">${metric('Активные заказы', d.active_orders, `${d.ready_orders} готово`, 'к выдаче', '▤')}${metric('Выручка за месяц', money(d.month_revenue), 'по оплатам', 'текущий месяц', '₽')}${metric('Автомобили', d.cars, 'в базе', 'зарегистрировано', '▣')}${metric('Низкий остаток', d.low_stock, 'меньше 5 шт.', 'запчасти', '◇')}</div>
+  <div class="panel section-space"><div class="panel-head"><div class="panel-title">Последние заказы</div><button class="panel-link" onclick="go('orders')">Все заказы →</button></div><table class="orders-table"><thead><tr><th>Автомобиль</th><th>Клиент</th><th>Статус</th><th>Сумма</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-function orderTable(short = false) {
-  let rows = [
-    [
-      "А991МР12",
-      "BMW X5",
-      "Иванов Дмитрий",
-      "Диагностика",
-      "12 800 ₽",
-      "s-diag",
-    ],
-    ["К483КХ12", "Kia Rio", "Смирнова Анна", "В работе", "8 450 ₽", "s-work"],
-    [
-      "Т214РВ12",
-      "Toyota Camry",
-      "Петров Алексей",
-      "Готов",
-      "46 200 ₽",
-      "s-done",
-    ],
-    ["М712ТА12", "Audi A6", "Соколов Максим", "Принят", "5 900 ₽", "s-new"],
-    [
-      "О221ЕР12",
-      "Mercedes E",
-      "Кузнецов Илья",
-      "Ожидание запчастей",
-      "72 400 ₽",
-      "s-wait",
-    ],
-  ];
-  return `<table class="orders-table"><thead><tr><th>Автомобиль</th><th>Клиент</th><th>Статус</th><th>Сумма</th><th></th></tr></thead><tbody>${rows
-    .slice(0, short ? 4 : 5)
-    .map(
-      (r, i) =>
-        `<tr><td><div class="car-cell"><img class="car-thumb" src="${A(
-          i
-        )}"><div class="car-name"><strong>${r[0]}</strong><span>${
-          r[1]
-        }</span></div></div></td><td>${r[2]}</td><td><span class="status ${
-          r[5]
-        }">${r[3]}</span></td><td><b>${
-          r[4]
-        }</b></td><td><button class="tiny-btn" onclick="showToast('Открыт заказ ${
-          r[0]
-        }')">Открыть</button></td></tr>`
-    )
-    .join("")}</tbody></table>`;
+
+async function orders() {
+  const [list, statuses, employees] = await Promise.all([api('/api/orders'), api('/api/statuses'), api('/api/employees')]);
+  cache.orders = list; cache.statuses = statuses; cache.employees = employees;
+  return renderOrdersPage(list, statuses, employees);
 }
-function orders() {
-  return `<div class="searchbar"><input class="search" placeholder="⌕  Поиск по номеру, VIN или клиенту"><div class="filters"><select class="select"><option>Все статусы</option><option>Принят</option><option>Диагностика</option><option>В работе</option><option>Готов</option></select><select class="select"><option>Все мастера</option><option>Петров А.</option><option>Соколов М.</option></select></div></div><div class="panel data-panel">${orderTable()}</div>`;
+function renderOrdersPage(list, statuses=cache.statuses, employees=cache.employees) {
+  const rows = list.length ? list.map((r,i) => `<tr>
+    <td><div class="car-cell"><img class="car-thumb" src="${A(i)}"><div class="car-name"><strong>${esc(r.license_plate || 'Без номера')}</strong><span>${esc(r.brand)} ${esc(r.model)}</span></div></div></td>
+    <td>${esc(r.client_name)}</td><td><span class="status ${statusClass(r.status_name)}">${esc(r.status_name)}</span></td>
+    <td><b>${money(r.order_total)}</b><div class="muted-mini">Оплачено: ${money(r.paid_total)}</div></td>
+    <td><button class="tiny-btn" onclick="openOrder(${r.order_id})">Открыть</button></td></tr>`).join('') : emptyRow(5);
+  return `<div class="searchbar"><input id="ordersSearch" class="search" placeholder="⌕ Поиск по номеру, VIN или клиенту"><div class="filters"><select id="ordersStatus" class="select"><option value="">Все статусы</option>${statuses.map(x=>`<option value="${x.status_id}">${esc(x.name)}</option>`).join('')}</select><select id="ordersEmployee" class="select"><option value="">Все мастера</option>${employees.map(x=>`<option value="${x.employee_id}">${esc(x.full_name)}</option>`).join('')}</select></div></div><div class="panel data-panel"><table class="orders-table"><thead><tr><th>Автомобиль</th><th>Клиент</th><th>Статус</th><th>Сумма</th><th></th></tr></thead><tbody id="ordersBody">${rows}</tbody></table></div>`;
 }
-function clients() {
-  let data = [
-    [
-      "Иванов Дмитрий",
-      " +7 917 441-20-11",
-      "d.ivanov@mail.ru",
-      "BMW X5 · 2019",
-    ],
-    [
-      "Смирнова Анна",
-      "+7 902 318-72-44",
-      "a.smirnova@mail.ru",
-      "Kia Rio · 2021",
-    ],
-    [
-      "Петров Алексей",
-      "+7 927 510-33-12",
-      "a.petrov@mail.ru",
-      "Toyota Camry · 2020",
-    ],
-    [
-      "Соколов Максим",
-      "+7 905 802-11-08",
-      "m.sokolov@mail.ru",
-      "Audi A6 · 2018",
-    ],
-    [
-      "Кузнецов Илья",
-      "+7 917 120-49-01",
-      "i.kuznetsov@mail.ru",
-      "Mercedes E · 2022",
-    ],
-  ];
-  return shell(
-    `<div class="searchbar"><input class="search" placeholder="⌕  Поиск по имени или телефону"></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Клиент</th><th>Телефон</th><th>Почта</th><th>Автомобиль</th><th></th></tr></thead><tbody>${data
-      .map(
-        (x, i) =>
-          `<tr><td><div class="person"><div class="person-avatar">${x[0]
-            .split(" ")
-            .map((y) => y[0])
-            .join("")}</div><b>${x[0]}</b></div></td><td>${x[1]}</td><td>${
-            x[2]
-          }</td><td>${
-            x[3]
-          }</td><td><button class="tiny-btn" onclick="showToast('Карточка клиента открыта')">Карточка</button></td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function clients() {
+  const data = await api('/api/clients'); cache.clients = data;
+  const rows = data.length ? data.map(x => `<tr><td><div class="person"><div class="person-avatar">${esc(x.full_name.split(' ').map(y=>y[0]).join('').slice(0,2))}</div><b>${esc(x.full_name)}</b></div></td><td>${esc(x.phone)}</td><td>${esc(x.email || '—')}</td><td>${esc(x.cars || '—')}</td><td><button class="tiny-btn" onclick="go('cars')">Машины: ${x.car_count}</button></td></tr>`).join('') : emptyRow(5);
+  return shell(`<div class="searchbar"><input id="clientsSearch" class="search" placeholder="⌕ Поиск по имени или телефону"></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Клиент</th><th>Телефон</th><th>Почта</th><th>Автомобили</th><th></th></tr></thead><tbody id="clientsBody">${rows}</tbody></table></div>`);
 }
-function cars() {
-  let data = [
-    ["А991МР12", "BMW", "X5", "2019", "84 210 км", "Иванов Дмитрий"],
-    ["К483КХ12", "Kia", "Rio", "2021", "52 400 км", "Смирнова Анна"],
-    ["Т214РВ12", "Toyota", "Camry", "2020", "91 700 км", "Петров Алексей"],
-    ["М712ТА12", "Audi", "A6", "2018", "126 300 км", "Соколов Максим"],
-    [
-      "О221ЕР12",
-      "Mercedes-Benz",
-      "E-Class",
-      "2022",
-      "38 500 км",
-      "Кузнецов Илья",
-    ],
-    ["Н340ВС12", "Volkswagen", "Tiguan", "2020", "77 900 км", "Орлов Павел"],
-  ];
-  return shell(
-    `<div class="searchbar"><input class="search" placeholder="⌕  Госномер или VIN"><select class="select"><option>Все марки</option><option>BMW</option><option>Kia</option><option>Toyota</option></select></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Автомобиль</th><th>Госномер</th><th>Год</th><th>Пробег</th><th>Владелец</th><th></th></tr></thead><tbody>${data
-      .map(
-        (x, i) =>
-          `<tr><td><div class="car-cell"><img class="car-thumb" src="${A(
-            i
-          )}"><div class="car-name"><strong>${x[1]} ${
-            x[2]
-          }</strong><span>VIN: WBADEMO${
-            100 + i
-          }8</span></div></div></td><td><b>${x[0]}</b></td><td>${
-            x[3]
-          }</td><td>${x[4]}</td><td>${
-            x[5]
-          }</td><td><button class="tiny-btn">История</button></td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function cars() {
+  const data = await api('/api/cars'); cache.cars = data;
+  const rows = data.length ? data.map((x,i) => `<tr><td><div class="car-cell"><img class="car-thumb" src="${A(i)}"><div class="car-name"><strong>${esc(x.brand)} ${esc(x.model)}</strong><span>VIN: ${esc(x.vin || '—')}</span></div></div></td><td><b>${esc(x.license_plate || '—')}</b></td><td>${esc(x.year || '—')}</td><td>${x.mileage != null ? `${Number(x.mileage).toLocaleString('ru-RU')} км` : '—'}</td><td>${esc(x.client_name)}</td><td><button class="tiny-btn" onclick="showCarHistory('${esc(x.license_plate || x.vin || x.brand)}')">История</button></td></tr>`).join('') : emptyRow(6);
+  return shell(`<div class="searchbar"><input id="carsSearch" class="search" placeholder="⌕ Госномер, VIN, марка или владелец"></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Автомобиль</th><th>Госномер</th><th>Год</th><th>Последний пробег</th><th>Владелец</th><th></th></tr></thead><tbody id="carsBody">${rows}</tbody></table></div>`);
 }
-function employees() {
-  let d = [
-    ["Петров Алексей", "Мастер-приёмщик", "+7 917 440-11-22", true],
-    ["Соколов Максим", "Автомеханик", "+7 902 220-31-12", true],
-    ["Орлов Павел", "Автомеханик", "+7 927 330-42-08", true],
-    ["Кузьмин Андрей", "Диагност", "+7 917 550-11-08", true],
-    ["Васильев Роман", "Автомеханик", "+7 905 881-72-44", false],
-  ];
-  return shell(
-    `<div class="panel data-panel"><table class="data-table"><thead><tr><th>Сотрудник</th><th>Должность</th><th>Телефон</th><th>Статус</th><th></th></tr></thead><tbody>${d
-      .map(
-        (x) =>
-          `<tr><td><div class="person"><div class="person-avatar">${x[0]
-            .split(" ")
-            .map((y) => y[0])
-            .join("")}</div><b>${x[0]}</b></div></td><td>${x[1]}</td><td>${
-            x[2]
-          }</td><td><span class="status ${x[3] ? "s-done" : "s-wait"}">${
-            x[3] ? "Работает" : "Неактивен"
-          }</span></td><td><button class="tiny-btn">Изменить</button></td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function employees() {
+  const d = await api('/api/employees'); cache.employees = d;
+  const rows = d.length ? d.map(x => `<tr><td><div class="person"><div class="person-avatar">${esc(x.full_name.split(' ').map(y=>y[0]).join('').slice(0,2))}</div><b>${esc(x.full_name)}</b></div></td><td>${esc(x.position)}</td><td>${esc(x.phone || '—')}</td><td><span class="status ${Number(x.is_active) ? 's-done':'s-wait'}">${Number(x.is_active) ? 'Работает':'Неактивен'}</span></td><td></td></tr>`).join('') : emptyRow(5);
+  return shell(`<div class="panel data-panel"><table class="data-table"><thead><tr><th>Сотрудник</th><th>Должность</th><th>Телефон</th><th>Статус</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
-function works() {
-  let d = [
-    ["Замена моторного масла", "от 2 500 ₽", "1 ч 00 мин"],
-    ["Диагностика ходовой части", "от 1 500 ₽", "45 мин"],
-    ["Замена тормозных колодок", "от 3 200 ₽", "1 ч 30 мин"],
-    ["Компьютерная диагностика", "от 1 800 ₽", "40 мин"],
-    ["Замена свечей зажигания", "от 2 200 ₽", "1 ч 00 мин"],
-    ["Развал-схождение", "от 2 900 ₽", "1 ч 30 мин"],
-    ["Замена аккумулятора", "от 800 ₽", "30 мин"],
-    ["ТО по регламенту", "от 6 500 ₽", "2 ч 30 мин"],
-  ];
-  return shell(
-    `<div class="panel data-panel"><table class="data-table"><thead><tr><th>Название работы</th><th>Базовая цена</th><th>Время</th><th></th></tr></thead><tbody>${d
-      .map(
-        (x) =>
-          `<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td>${x[2]}</td><td><button class="tiny-btn">Изменить</button></td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function works() {
+  const d = await api('/api/work-types'); cache.works = d;
+  const rows = d.length ? d.map(x => `<tr><td><b>${esc(x.name)}</b></td><td>${money(x.default_price)}</td><td>${x.estimated_duration != null ? `${esc(x.estimated_duration)} мин` : '—'}</td><td></td></tr>`).join('') : emptyRow(4);
+  return shell(`<div class="panel data-panel"><table class="data-table"><thead><tr><th>Название работы</th><th>Базовая цена</th><th>Время</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
-function parts() {
-  let d = [
-    ["Масло 5W-30 4L", "MOB-530-4", "Mobil", "18", "4 900 ₽"],
-    ["Колодки передние BMW X5", "BP-5521", "Brembo", "3", "12 800 ₽"],
-    ["Фильтр масляный", "OF-204", "Mann", "24", "1 100 ₽"],
-    ["Свеча зажигания", "SP-884", "NGK", "6", "1 350 ₽"],
-    ["Фильтр воздушный", "AF-120", "Mahle", "2", "1 700 ₽"],
-    ["Антифриз G12+", "AFZ-5", "Liqui Moly", "31", "1 900 ₽"],
-  ];
-  return shell(
-    `<div class="searchbar"><input class="search" placeholder="⌕  Поиск по названию или артикулу"><button class="btn btn-light" onclick="showToast('Открыт фильтр склада')">Низкий остаток</button></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Запчасть</th><th>Артикул</th><th>Производитель</th><th>Остаток</th><th>Цена</th><th></th></tr></thead><tbody>${d
-      .map(
-        (x) =>
-          `<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td>${
-            x[2]
-          }</td><td class="${+x[3] < 5 ? "stock-low" : ""}">${
-            x[3]
-          } шт.</td><td>${
-            x[4]
-          }</td><td><button class="tiny-btn">Изменить</button></td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function parts() {
+  const d = await api('/api/parts'); cache.parts = d;
+  const rows = d.length ? d.map(x => `<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.article || '—')}</td><td>${esc(x.manufacturer || '—')}</td><td class="${Number(x.stock_quantity)<5?'stock-low':''}">${esc(x.stock_quantity)} шт.</td><td>${money(x.price)}</td><td></td></tr>`).join('') : emptyRow(6);
+  return shell(`<div class="searchbar"><input id="partsSearch" class="search" placeholder="⌕ Поиск по названию или артикулу"></div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Запчасть</th><th>Артикул</th><th>Производитель</th><th>Остаток</th><th>Цена</th><th></th></tr></thead><tbody id="partsBody">${rows}</tbody></table></div>`);
 }
-function payments() {
-  let d = [
-    ["28.09.2026", "Т214РВ12 · Toyota Camry", "46 200 ₽", "Банковская карта"],
-    ["28.09.2026", "К483КХ12 · Kia Rio", "4 000 ₽", "Наличные"],
-    ["27.09.2026", "О221ЕР12 · Mercedes E", "30 000 ₽", "Перевод"],
-    ["26.09.2026", "А991МР12 · BMW X5", "12 800 ₽", "Банковская карта"],
-    ["25.09.2026", "М712ТА12 · Audi A6", "5 900 ₽", "Наличные"],
-  ];
-  return shell(
-    `<div class="cards">${metric(
-      "За сегодня",
-      "50 200 ₽",
-      "↗ 9%",
-      "5 платежей",
-      "₽"
-    )}${metric(
-      "За сентябрь",
-      "684 320 ₽",
-      "↗ 12,4%",
-      "vs. август",
-      "₽"
-    )}${metric(
-      "Наличными",
-      "182 400 ₽",
-      "26,6%",
-      "от общей суммы",
-      "₽"
-    )}${metric(
-      "Картой",
-      "381 920 ₽",
-      "55,8%",
-      "от общей суммы",
-      "₽"
-    )}</div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Дата</th><th>Заказ</th><th>Сумма</th><th>Способ</th></tr></thead><tbody>${d
-      .map(
-        (x) =>
-          `<tr><td>${x[0]}</td><td><b>${x[1]}</b></td><td><b>${x[2]}</b></td><td>${x[3]}</td></tr>`
-      )
-      .join("")}</tbody></table></div>`
-  );
+
+async function payments() {
+  const d = await api('/api/payments');
+  const today = new Date().toISOString().slice(0,10);
+  const todaySum = d.filter(x=>String(x.payment_date).slice(0,10)===today).reduce((s,x)=>s+Number(x.amount),0);
+  const monthSum = d.filter(x=>String(x.payment_date).slice(0,7)===today.slice(0,7)).reduce((s,x)=>s+Number(x.amount),0);
+  const rows = d.length ? d.map(x => `<tr><td>${dateFmt(x.payment_date,true)}</td><td><b>#${x.order_id} · ${esc(x.license_plate || 'Без номера')} · ${esc(x.brand)} ${esc(x.model)}</b><div class="muted-mini">${esc(x.client_name)}</div></td><td><b>${money(x.amount)}</b></td><td>${esc(x.payment_method || '—')}</td></tr>`).join('') : emptyRow(4);
+  return shell(`<div class="cards">${metric('За сегодня',money(todaySum),'факт','по платежам','₽')}${metric('За месяц',money(monthSum),'факт','по платежам','₽')}</div><div class="panel data-panel"><table class="data-table"><thead><tr><th>Дата</th><th>Заказ</th><th>Сумма</th><th>Способ</th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
-function stats() {
-  let bars = [54, 68, 48, 82, 63, 88, 76, 95, 71, 84, 100, 91];
-  return shell(
-    `<div class="cards">${metric(
-      "Выручка",
-      "684 320 ₽",
-      "↗ 12,4%",
-      "сентябрь 2026",
-      "₽"
-    )}${metric("Заказов", "128", "↗ 7,6%", "за месяц", "▤")}${metric(
-      "Средний чек",
-      "5 346 ₽",
-      "↗ 4,2%",
-      "за заказ",
-      "₽"
-    )}${metric(
-      "Выполнено",
-      "91%",
-      "↗ 3,1%",
-      "без отмен",
-      "✓"
-    )}</div><div class="stats-grid section-space"><div class="panel"><div class="panel-head"><div><div class="panel-title">Выручка по месяцам</div><div class="page-sub">Демонстрационные данные</div></div></div><div class="chart">${bars
-      .map(
-        (v, i) =>
-          `<div class="bar ${
-            i === 11 ? "hot" : ""
-          }" style="height:${v}%"><span>${
-            ["О", "Н", "Д", "Я", "Ф", "М", "А", "М", "И", "И", "А", "С"][i]
-          }</span></div>`
-      )
-      .join(
-        ""
-      )}</div><div class="legend">Показана динамика за последние 12 месяцев. После подключения БД график будет строиться автоматически.</div></div><div class="panel"><div class="panel-head"><div class="panel-title">Структура выручки</div></div><div class="donut-wrap"><div class="donut"></div></div><div class="legend-list"><div><i class="dot"></i> Работы — 48%</div><div><i class="dot two"></i> Запчасти — 24%</div><div><i class="dot three"></i> Диагностика — 15%</div></div></div></div><div class="panel section-space"><div class="panel-head"><div class="panel-title">Самые частые работы</div></div>${[
-      "Замена масла",
-      "Диагностика ходовой",
-      "Тормозные колодки",
-      "Компьютерная диагностика",
-      "ТО по регламенту",
-    ]
-      .map(
-        (x, i) =>
-          `<div style="padding:12px 18px;border-bottom:1px solid #edf0ed;display:flex;align-items:center;gap:12px;font-size:10px"><b style="width:18px;color:#a0aaa5">0${
-            i + 1
-          }</b><span style="flex:1">${x}</span><div class="progress"><i style="width:${
-            92 - i * 13
-          }%"></i></div><b>${42 - i * 5}</b></div>`
-      )
-      .join("")}</div>`
-  );
+
+async function stats() {
+  const d = await api('/api/stats');
+  const months = d.months || [];
+  const max = Math.max(1, ...months.map(x=>Number(x.revenue)));
+  const bars = months.length ? months.map(x => `<div class="bar" style="height:${Math.max(5, Number(x.revenue)/max*100)}%"><span>${esc(x.month.slice(5))}</span></div>`).join('') : `<div class="empty-chart">Нет оплат для графика</div>`;
+  const works = d.popular_works?.length ? d.popular_works.map((x,i)=>`<div class="rank-row"><b>0${i+1}</b><span>${esc(x.name)}</span><strong>${Number(x.count_value).toLocaleString('ru-RU')}</strong></div>`).join('') : `<div class="empty-cell">Пока нет выполненных работ</div>`;
+  return shell(`<div class="cards">${metric('Выручка',money(d.summary.revenue),'текущий месяц','по оплатам','₽')}${metric('Заказов',d.summary.orders_count,'текущий месяц','создано','▤')}${metric('Средний чек',money(d.summary.avg_check),'расчёт','за заказ','₽')}</div><div class="panel section-space"><div class="panel-head"><div><div class="panel-title">Выручка по месяцам</div><div class="page-sub">Реальные данные из payments</div></div></div><div class="chart">${bars}</div></div><div class="panel section-space"><div class="panel-head"><div class="panel-title">Самые частые работы</div></div>${works}</div>`, 'аналитика');
 }
-function openCreate() {
-  document.getElementById("modalBody").innerHTML = `<h2>Новый ${
-    current === "orders" || current === "dashboard"
-      ? "заказ"
-      : pages[current].title.toLowerCase().slice(0, -1)
-  }</h2><p>Форма пока работает как визуальная заглушка. Позже поля будут связаны с базой данных.</p><div class="form-grid"><div class="field"><label>Клиент</label><input placeholder="ФИО клиента"></div><div class="field"><label>Телефон</label><input placeholder="+7 (___) ___-__-__"></div><div class="field"><label>Автомобиль</label><input placeholder="Марка и модель"></div><div class="field"><label>Госномер</label><input placeholder="А000АА12"></div><div class="field"><label>Ответственный мастер</label><select><option>Петров Алексей</option><option>Соколов Максим</option><option>Орлов Павел</option></select></div><div class="field"><label>Статус</label><select><option>Принят</option><option>Диагностика</option><option>В работе</option></select></div><div class="field full"><label>Жалоба клиента</label><textarea placeholder="Что беспокоит клиента..."></textarea></div></div><div class="modal-actions"><button class="btn btn-light" onclick="closeModal()">Отмена</button><button class="btn btn-lime" onclick="closeModal();showToast('Демо-запись создана')">Создать</button></div>`;
-  document.getElementById("modal").classList.add("open");
+
+async function render() {
+  const content = document.getElementById('content');
+  document.getElementById('pageTitle').textContent = pages[current].title;
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active', x.dataset.page===current));
+  content.innerHTML = `<div class="loading">Загрузка данных…</div>`;
+  try {
+    content.innerHTML = await pages[current].render();
+    bindPageEvents();
+  } catch (e) {
+    content.innerHTML = `<div class="page"><div class="error-box"><b>Не удалось получить данные из API.</b><br>${esc(e.message)}<br><br>Проверь, что запущен <code>node server.js</code> и MariaDB.</div></div>`;
+  }
 }
-function closeModal() {
-  document.getElementById("modal").classList.remove("open");
+function go(p) { current=p; render(); document.getElementById('sidebar').classList.remove('open'); }
+
+function debounce(fn, delay=250) { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),delay); }; }
+function bindPageEvents() {
+  const ordersSearch = document.getElementById('ordersSearch');
+  const ordersStatus = document.getElementById('ordersStatus');
+  const ordersEmployee = document.getElementById('ordersEmployee');
+  if (ordersSearch) {
+    const refresh = debounce(async ()=>{
+      const qs = new URLSearchParams();
+      if (ordersSearch.value) qs.set('q', ordersSearch.value);
+      if (ordersStatus.value) qs.set('status_id', ordersStatus.value);
+      if (ordersEmployee.value) qs.set('employee_id', ordersEmployee.value);
+      const list = await api(`/api/orders?${qs}`);
+      const tmp = document.createElement('div'); tmp.innerHTML = renderOrdersPage(list);
+      document.getElementById('ordersBody').innerHTML = tmp.querySelector('#ordersBody').innerHTML;
+    });
+    ordersSearch.addEventListener('input', refresh); ordersStatus.addEventListener('change', refresh); ordersEmployee.addEventListener('change', refresh);
+  }
+  for (const [id, endpoint, renderFn] of [['clientsSearch','/api/clients',clients],['carsSearch','/api/cars',cars],['partsSearch','/api/parts',parts]]) {
+    const el = document.getElementById(id); if (!el) continue;
+    el.addEventListener('input', debounce(async()=>{
+      const data = await api(`${endpoint}?q=${encodeURIComponent(el.value)}`);
+      if (id==='clientsSearch') document.getElementById('clientsBody').innerHTML = data.length ? data.map(x=>`<tr><td><div class="person"><div class="person-avatar">${esc(x.full_name.slice(0,2))}</div><b>${esc(x.full_name)}</b></div></td><td>${esc(x.phone)}</td><td>${esc(x.email||'—')}</td><td>${esc(x.cars||'—')}</td><td></td></tr>`).join('') : emptyRow(5);
+      if (id==='carsSearch') document.getElementById('carsBody').innerHTML = data.length ? data.map((x,i)=>`<tr><td><div class="car-cell"><img class="car-thumb" src="${A(i)}"><div class="car-name"><strong>${esc(x.brand)} ${esc(x.model)}</strong><span>VIN: ${esc(x.vin||'—')}</span></div></div></td><td><b>${esc(x.license_plate||'—')}</b></td><td>${esc(x.year||'—')}</td><td>${x.mileage!=null?`${Number(x.mileage).toLocaleString('ru-RU')} км`:'—'}</td><td>${esc(x.client_name)}</td><td><button class="tiny-btn" onclick="showCarHistory('${esc(x.license_plate||x.vin||x.brand)}')">История</button></td></tr>`).join('') : emptyRow(6);
+      if (id==='partsSearch') document.getElementById('partsBody').innerHTML = data.length ? data.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.article||'—')}</td><td>${esc(x.manufacturer||'—')}</td><td class="${Number(x.stock_quantity)<5?'stock-low':''}">${x.stock_quantity} шт.</td><td>${money(x.price)}</td><td></td></tr>`).join('') : emptyRow(6);
+    }));
+  }
 }
-function showToast(t) {
-  const x = document.getElementById("toast");
-  x.textContent = t;
-  x.classList.add("show");
-  setTimeout(() => x.classList.remove("show"), 1800);
+
+function field(label, name, type='text', extra='') { return `<div class="field"><label>${esc(label)}</label><input name="${esc(name)}" type="${esc(type)}" ${extra}></div>`; }
+function selectField(label,name,items,valueKey,textKey,placeholder='Выберите') { return `<div class="field"><label>${esc(label)}</label><select name="${esc(name)}"><option value="">${esc(placeholder)}</option>${items.map(x=>`<option value="${esc(x[valueKey])}">${esc(x[textKey])}</option>`).join('')}</select></div>`; }
+async function openCreate() {
+  try { await loadRefs(); } catch(e) { showToast(e.message); return; }
+  let title='', body='';
+  if (current==='dashboard' || current==='orders') {
+    title='Новый заказ';
+    body=`${selectField('Автомобиль','car_id',cache.cars,'car_id','license_plate','Выберите автомобиль')}${selectField('Ответственный','employee_id',cache.employees.filter(x=>Number(x.is_active)),'employee_id','full_name','Не назначен')}${selectField('Статус','status_id',cache.statuses,'status_id','name','Принят')}${field('Пробег, км','mileage','number','min="0"')}${field('Плановая дата','planned_finish_date','date')}<div class="field full"><label>Жалоба клиента</label><textarea name="complaint"></textarea></div>`;
+  } else if (current==='clients') {
+    title='Новый клиент'; body=`${field('ФИО','full_name','text','required')}${field('Телефон','phone','text','required')}${field('Email','email','email')}`;
+  } else if (current==='cars') {
+    title='Новый автомобиль'; body=`${selectField('Владелец','client_id',cache.clients,'client_id','full_name')}${field('Марка','brand','text','required')}${field('Модель','model','text','required')}${field('Госномер','license_plate')}${field('VIN','vin')}${field('Год','year','number','min="1900" max="2100"')}`;
+  } else if (current==='employees') {
+    title='Новый сотрудник'; body=`${field('ФИО','full_name','text','required')}${field('Должность','position','text','required')}${field('Телефон','phone')}<div class="field"><label>Статус</label><select name="is_active"><option value="1">Работает</option><option value="0">Неактивен</option></select></div>`;
+  } else if (current==='works') {
+    title='Новый вид работы'; body=`${field('Название','name','text','required')}${field('Базовая цена','default_price','number','min="0" step="0.01" required')}${field('Время, мин','estimated_duration','number','min="1"')}`;
+  } else if (current==='parts') {
+    title='Новая запчасть'; body=`${field('Название','name','text','required')}${field('Артикул','article')}${field('Производитель','manufacturer')}${field('Остаток','stock_quantity','number','min="0" value="0"')}${field('Цена','price','number','min="0" step="0.01" required')}`;
+  } else if (current==='payments') {
+    title='Новая оплата'; body=`${selectField('Заказ','order_id',cache.orders,'order_id','order_id')}${field('Сумма','amount','number','min="0" step="0.01" required')}<div class="field"><label>Способ оплаты</label><select name="payment_method"><option>Банковская карта</option><option>Наличные</option><option>Перевод</option></select></div>`;
+  } else return;
+  document.getElementById('modalBody').innerHTML = `<h2>${esc(title)}</h2><form id="createForm"><div class="form-grid">${body}</div><div class="modal-actions"><button type="button" class="btn btn-light" onclick="closeModal()">Отмена</button><button class="btn btn-lime" type="submit">Сохранить</button></div></form>`;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('createForm').addEventListener('submit', submitCreate);
 }
-let current = "dashboard";
-function render() {
-  document.getElementById("content").innerHTML = pages[current].render();
-  document.getElementById("pageTitle").textContent = pages[current].title;
-  document
-    .querySelectorAll(".nav-item")
-    .forEach((x) => x.classList.toggle("active", x.dataset.page === current));
+async function submitCreate(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  let endpoint;
+  if (current==='dashboard'||current==='orders') endpoint='/api/orders';
+  if (current==='clients') endpoint='/api/clients';
+  if (current==='cars') endpoint='/api/cars';
+  if (current==='employees') endpoint='/api/employees';
+  if (current==='works') endpoint='/api/work-types';
+  if (current==='parts') endpoint='/api/parts';
+  if (current==='payments') endpoint='/api/payments';
+  try {
+    await api(endpoint,{method:'POST',body:JSON.stringify(data)});
+    closeModal(); showToast('Запись сохранена в MariaDB'); await render();
+  } catch(err) { showToast(err.message); }
 }
-function go(p) {
-  current = p;
-  render();
-  document.getElementById("sidebar").classList.remove("open");
+
+async function openOrder(id) {
+  try {
+    const [o, works, parts, employees] = await Promise.all([api(`/api/orders/${id}`), api('/api/work-types'), api('/api/parts'), api('/api/employees')]);
+    const wRows = o.works.length ? o.works.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.quantity)}</td><td>${money(x.price)}</td><td>${money(Number(x.quantity)*Number(x.price))}</td></tr>`).join('') : emptyRow(4,'Работы не добавлены');
+    const pRows = o.parts.length ? o.parts.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.quantity)}</td><td>${money(x.price)}</td><td>${money(Number(x.quantity)*Number(x.price))}</td></tr>`).join('') : emptyRow(4,'Запчасти не добавлены');
+    const payRows = o.payments.length ? o.payments.map(x=>`<tr><td>${dateFmt(x.payment_date,true)}</td><td>${money(x.amount)}</td><td>${esc(x.payment_method||'—')}</td></tr>`).join('') : emptyRow(3,'Оплат пока нет');
+    document.getElementById('modalBody').innerHTML = `<h2>Заказ #${id}</h2><p><b>${esc(o.license_plate||'Без номера')} · ${esc(o.brand)} ${esc(o.model)}</b> · ${esc(o.client_name)}<br>Статус: <span class="status ${statusClass(o.status_name)}">${esc(o.status_name)}</span> · Пробег: ${o.mileage?`${Number(o.mileage).toLocaleString('ru-RU')} км`:'—'}</p>
+      <h3>Работы</h3><table class="data-table compact"><thead><tr><th>Работа</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${wRows}</tbody></table>
+      <form class="inline-add" onsubmit="addOrderWork(event,${id})"><select name="work_type_id" required><option value="">Добавить работу…</option>${works.map(x=>`<option value="${x.work_type_id}" data-price="${x.default_price}">${esc(x.name)} · ${money(x.default_price)}</option>`).join('')}</select><select name="employee_id"><option value="">Мастер не указан</option>${employees.filter(x=>Number(x.is_active)).map(x=>`<option value="${x.employee_id}">${esc(x.full_name)}</option>`).join('')}</select><input name="quantity" type="number" min="0.01" step="0.01" value="1"><button class="btn btn-lime">Добавить</button></form>
+      <h3>Запчасти</h3><table class="data-table compact"><thead><tr><th>Запчасть</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead><tbody>${pRows}</tbody></table>
+      <form class="inline-add" onsubmit="addOrderPart(event,${id})"><select name="part_id" required><option value="">Добавить запчасть…</option>${parts.map(x=>`<option value="${x.part_id}" data-price="${x.price}">${esc(x.name)} · ${x.stock_quantity} шт. · ${money(x.price)}</option>`).join('')}</select><input name="quantity" type="number" min="1" value="1"><button class="btn btn-lime">Списать со склада</button></form>
+      <h3>Оплаты</h3><table class="data-table compact"><thead><tr><th>Дата</th><th>Сумма</th><th>Способ</th></tr></thead><tbody>${payRows}</tbody></table>
+      <form class="inline-add" onsubmit="addPayment(event,${id})"><input name="amount" type="number" min="0" step="0.01" placeholder="Сумма" required><select name="payment_method"><option>Банковская карта</option><option>Наличные</option><option>Перевод</option></select><button class="btn btn-lime">Оплатить</button></form>`;
+    document.getElementById('modal').classList.add('open');
+  } catch(e) { showToast(e.message); }
 }
-document
-  .querySelectorAll(".nav-item")
-  .forEach((x) => x.addEventListener("click", () => go(x.dataset.page)));
-document
-  .getElementById("menuBtn")
-  .addEventListener("click", () =>
-    document.getElementById("sidebar").classList.toggle("open")
-  );
-document.getElementById("modalClose").addEventListener("click", closeModal);
-document.getElementById("modal").addEventListener("click", (e) => {
-  if (e.target.id === "modal") closeModal();
-});
+async function addOrderWork(e,id) {
+  e.preventDefault(); const f=e.target; const opt=f.work_type_id.selectedOptions[0];
+  const data=Object.fromEntries(new FormData(f).entries()); data.price=opt.dataset.price;
+  try { await api(`/api/orders/${id}/works`,{method:'POST',body:JSON.stringify(data)}); await openOrder(id); showToast('Работа добавлена'); } catch(err){showToast(err.message);}
+}
+async function addOrderPart(e,id) {
+  e.preventDefault(); const f=e.target; const opt=f.part_id.selectedOptions[0];
+  const data=Object.fromEntries(new FormData(f).entries()); data.price=opt.dataset.price;
+  try { await api(`/api/orders/${id}/parts`,{method:'POST',body:JSON.stringify(data)}); await openOrder(id); showToast('Запчасть списана'); } catch(err){showToast(err.message);}
+}
+async function addPayment(e,id) {
+  e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); data.order_id=id;
+  try { await api('/api/payments',{method:'POST',body:JSON.stringify(data)}); await openOrder(id); showToast('Оплата сохранена'); } catch(err){showToast(err.message);}
+}
+async function showCarHistory(q) {
+  try {
+    const list=await api(`/api/orders?q=${encodeURIComponent(q)}`);
+    document.getElementById('modalBody').innerHTML=`<h2>История обслуживания</h2>${list.length?list.map(x=>`<div class="history-card"><b>#${x.order_id} · ${dateFmt(x.created_at)}</b><span class="status ${statusClass(x.status_name)}">${esc(x.status_name)}</span><p>${esc(x.complaint||'Без описания')} · ${money(x.order_total)}</p><button class="tiny-btn" onclick="openOrder(${x.order_id})">Открыть</button></div>`).join(''):'<p>Заказов пока нет.</p>'}`;
+    document.getElementById('modal').classList.add('open');
+  } catch(e){showToast(e.message);}
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function showToast(t){ const x=document.getElementById('toast'); x.textContent=t; x.classList.add('show'); setTimeout(()=>x.classList.remove('show'),2600); }
+
+document.querySelectorAll('.nav-item').forEach(x=>x.addEventListener('click',()=>go(x.dataset.page)));
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
 render();
