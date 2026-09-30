@@ -951,20 +951,118 @@ button {
 }
 
 /* Live API additions */
-.loading { padding: 60px 34px; color: #74857d; font-size: 13px; }
-.error-box { background:#fff; border:1px solid #f0c8bd; border-radius:12px; padding:22px; color:#7d3426; line-height:1.6; }
-.empty-cell { text-align:center; padding:28px !important; color:#8b9791; }
-.muted-mini { font-size:9px; color:#8b9791; margin-top:3px; font-weight:400; }
-.compact { margin: 8px 0 14px; }
-.inline-add { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0 22px; }
-.inline-add input,.inline-add select { border:1px solid #dde4df; background:#fff; border-radius:8px; padding:9px 10px; font-size:10px; min-width:130px; }
-.inline-add select { flex:1; }
-.modal-card h3 { margin:22px 0 6px; font-family:Manrope; font-size:15px; }
-.history-card { border:1px solid #e4e8e4; border-radius:10px; padding:12px; margin:9px 0; }
-.history-card .status { float:right; }
-.history-card p { color:#66736d; font-size:11px; }
-.rank-row { padding:12px 18px; border-bottom:1px solid #edf0ed; display:flex; align-items:center; gap:12px; font-size:11px; }
-.rank-row b { color:#a0aaa5; width:24px; }
-.rank-row span { flex:1; }
-.empty-chart { width:100%; display:grid; place-items:center; color:#8b9791; font-size:11px; }
-@media (max-width: 800px) { .inline-add { align-items:stretch; flex-direction:column; } .inline-add input,.inline-add select,.inline-add button { width:100%; } }
+.loading {
+  padding: 60px 34px;
+  color: #74857d;
+  font-size: 13px;
+}
+.error-box {
+  background: #fff;
+  border: 1px solid #f0c8bd;
+  border-radius: 12px;
+  padding: 22px;
+  color: #7d3426;
+  line-height: 1.6;
+}
+.empty-cell {
+  text-align: center;
+  padding: 28px !important;
+  color: #8b9791;
+}
+.muted-mini {
+  font-size: 9px;
+  color: #8b9791;
+  margin-top: 3px;
+  font-weight: 400;
+}
+.compact {
+  margin: 8px 0 14px;
+}
+.inline-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0 22px;
+}
+.inline-add input,
+.inline-add select {
+  border: 1px solid #dde4df;
+  background: #fff;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 10px;
+  min-width: 130px;
+}
+.inline-add select {
+  flex: 1;
+}
+.modal-card h3 {
+  margin: 22px 0 6px;
+  font-family: Manrope;
+  font-size: 15px;
+}
+.history-card {
+  border: 1px solid #e4e8e4;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 9px 0;
+}
+.history-card .status {
+  float: right;
+}
+.history-card p {
+  color: #66736d;
+  font-size: 11px;
+}
+.rank-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid #edf0ed;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+}
+.rank-row b {
+  color: #a0aaa5;
+  width: 24px;
+}
+.rank-row span {
+  flex: 1;
+}
+.empty-chart {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  color: #8b9791;
+  font-size: 11px;
+}
+@media (max-width: 800px) {
+  .inline-add {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .inline-add input,
+  .inline-add select,
+  .inline-add button {
+    width: 100%;
+  }
+}
+
+/* Review fixes */
+.search-grid {
+  width: 100%;
+}
+.search-grid .search {
+  flex: 1;
+  min-width: 170px;
+}
+.row-actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.field input[type="file"] {
+  background: #fafbf9;
+  padding: 7px;
+}

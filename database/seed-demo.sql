@@ -53,13 +53,13 @@ INSERT INTO work_types(name, default_price, estimated_duration) VALUES
 ('Замена аккумулятора', 800, 30),
 ('ТО по регламенту', 6500, 150);
 
-INSERT INTO parts(name, article, manufacturer, stock_quantity, price) VALUES
-('Масло 5W-30 4L', 'MOB-530-4', 'Mobil', 18, 4900),
-('Колодки передние BMW X5', 'BP-5521', 'Brembo', 3, 12800),
-('Фильтр масляный', 'OF-204', 'Mann', 24, 1100),
-('Свеча зажигания', 'SP-884', 'NGK', 6, 1350),
-('Фильтр воздушный', 'AF-120', 'Mahle', 2, 1700),
-('Антифриз G12+', 'AFZ-5', 'Liqui Moly', 31, 1900);
+INSERT INTO parts(name, part_type, article, manufacturer, stock_quantity, price) VALUES
+('Масло 5W-30 4L', 'Моторное масло', 'MOB-530-4', 'Mobil', 18, 4900),
+('Колодки передние BMW X5', 'Тормозная система', 'BP-5521', 'Brembo', 3, 12800),
+('Фильтр масляный', 'Фильтр', 'OF-204', 'Mann', 24, 1100),
+('Свеча зажигания', 'Система зажигания', 'SP-884', 'NGK', 6, 1350),
+('Фильтр воздушный', 'Фильтр', 'AF-120', 'Mahle', 2, 1700),
+('Антифриз G12+', 'Техническая жидкость', 'AFZ-5', 'Liqui Moly', 31, 1900);
 
 INSERT INTO orders(car_id, employee_id, status_id, created_at, planned_finish_date, mileage, complaint, diagnosis) VALUES
 (1, 4, 2, '2026-09-28 09:00:00', '2026-09-29', 84210, 'Стук в передней подвеске', 'Требуется диагностика ходовой'),

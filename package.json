@@ -11,6 +11,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "mariadb": "^3.4.0"
+    "mariadb": "^3.4.0",
+    "multer": "^2.0.2"
   }
 }

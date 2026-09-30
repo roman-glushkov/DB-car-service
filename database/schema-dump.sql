@@ -30,10 +30,13 @@ CREATE TABLE `cars` (
   `brand` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Марка автомобиля',
   `model` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Модель автомобиля',
   `year` smallint(6) DEFAULT NULL COMMENT 'Год выпуска автомобиля',
+  `photo_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Путь к фотографии автомобиля',
   PRIMARY KEY (`car_id`),
   UNIQUE KEY `uq_cars_vin` (`vin`),
   UNIQUE KEY `uq_cars_license_plate` (`license_plate`),
   KEY `fk_cars_client` (`client_id`),
+  CONSTRAINT `chk_cars_vin` CHECK (`vin` is null or (`vin` regexp '^[A-HJ-NPR-Z0-9]{17}$')),
+  CONSTRAINT `chk_cars_year` CHECK (`year` is null or (`year` >= 1886 and `year` <= 2100)),
   CONSTRAINT `fk_cars_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Автомобили клиентов автосервиса';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -240,6 +243,7 @@ DROP TABLE IF EXISTS `parts`;
 CREATE TABLE `parts` (
   `part_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Название запчасти',
+  `part_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Тип запчасти',
   `article` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Артикул запчасти',
   `manufacturer` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Производитель запчасти',
   `stock_quantity` int(11) NOT NULL DEFAULT 0 COMMENT 'Количество запчастей на складе',
