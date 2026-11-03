@@ -30,7 +30,6 @@ const route = (fn) => (req, res, next) =>
 
 app.use(express.static(__dirname));
 
-// ---------- проверка соединения ----------
 app.get(
   "/api/health",
   route(async (_req, res) => {
@@ -39,7 +38,6 @@ app.get(
   })
 );
 
-// ---------- клиенты ----------
 app.get(
   "/api/clients",
   route(async (_req, res) => {
@@ -57,7 +55,6 @@ app.get(
   })
 );
 
-// ---------- машины ----------
 app.get(
   "/api/cars",
   route(async (_req, res) => {
@@ -75,7 +72,6 @@ app.get(
   })
 );
 
-// ---------- сотрудники ----------
 app.get(
   "/api/employees",
   route(async (_req, res) => {
@@ -87,7 +83,6 @@ app.get(
   })
 );
 
-// ---------- работы ----------
 app.get(
   "/api/work-types",
   route(async (_req, res) => {
@@ -99,7 +94,6 @@ app.get(
   })
 );
 
-// ---------- запчасти ----------
 app.get(
   "/api/parts",
   route(async (_req, res) => {
@@ -111,7 +105,6 @@ app.get(
   })
 );
 
-// ---------- заказы ----------
 app.get(
   "/api/orders",
   route(async (_req, res) => {
@@ -132,7 +125,6 @@ app.get(
   })
 );
 
-// ---------- оплаты ----------
 app.get(
   "/api/payments",
   route(async (_req, res) => {
@@ -150,12 +142,10 @@ app.get(
   })
 );
 
-// ---------- отдаём index.html для всего остального ----------
 app.get("/{*splat}", (_req, res) =>
   res.sendFile(path.join(__dirname, "index.html"))
 );
 
-// ---------- обработчик ошибок ----------
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: err.message || "Ошибка сервера" });

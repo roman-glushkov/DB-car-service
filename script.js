@@ -1,4 +1,3 @@
-// ---------- утилиты ----------
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>'"]/g,
@@ -10,7 +9,6 @@ const esc = (v) =>
 
 const api = (url) => fetch(url).then((r) => r.json());
 
-// ---------- обёртка страницы ----------
 function page(title, columns, rows) {
   return `
     <div class="page">
@@ -28,7 +26,6 @@ function page(title, columns, rows) {
     </div>`;
 }
 
-// ---------- ЗАКАЗЫ ----------
 async function orders() {
   const list = await api("/api/orders");
   const rows = list.length
@@ -56,7 +53,6 @@ async function orders() {
   return page("Заказы", ["Автомобиль", "Клиент", "Статус", "Сумма"], rows);
 }
 
-// ---------- КЛИЕНТЫ ----------
 async function clients() {
   const list = await api("/api/clients");
   const rows = list.length
@@ -76,7 +72,6 @@ async function clients() {
   return page("Клиенты", ["Клиент", "Телефон", "Почта", "Автомобили"], rows);
 }
 
-// ---------- МАШИНЫ ----------
 async function cars() {
   const list = await api("/api/cars");
   const rows = list.length
@@ -109,7 +104,6 @@ async function cars() {
   );
 }
 
-// ---------- СОТРУДНИКИ ----------
 async function employees() {
   const list = await api("/api/employees");
   const rows = list.length
@@ -137,7 +131,6 @@ async function employees() {
   );
 }
 
-// ---------- РАБОТЫ ----------
 async function works() {
   const list = await api("/api/work-types");
   const rows = list.length
@@ -158,7 +151,6 @@ async function works() {
   return page("Работы", ["Название работы", "Базовая цена", "Время"], rows);
 }
 
-// ---------- ЗАПЧАСТИ ----------
 async function parts() {
   const list = await api("/api/parts");
   const rows = list.length
@@ -184,7 +176,6 @@ async function parts() {
   );
 }
 
-// ---------- ОПЛАТЫ ----------
 async function payments() {
   const list = await api("/api/payments");
   const rows = list.length
@@ -209,7 +200,6 @@ async function payments() {
   return page("Оплаты", ["Дата", "Заказ", "Сумма", "Способ"], rows);
 }
 
-// ---------- роутинг ----------
 const pages = { orders, clients, cars, employees, works, parts, payments };
 let current = "orders";
 
@@ -231,7 +221,6 @@ async function render() {
   }
 }
 
-// ---------- старт ----------
 document.querySelectorAll(".nav-item").forEach((x) =>
   x.addEventListener("click", () => {
     current = x.dataset.page;
