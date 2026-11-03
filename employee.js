@@ -57,6 +57,7 @@ function orderCard(order) {
   return `
     <article class="portal-card portal-order-card">
       <div class="portal-order-top"><span class="portal-order-id">ЗАКАЗ №${Number(order.order_id)}</span><span class="portal-status ${statusClass(order.status_name)}">${esc(order.status_name)}</span></div>
+      ${order.photo_path ? `<img class="portal-order-car-photo" data-image-preview src="${esc(order.photo_path)}" alt="${esc(`${order.brand} ${order.model}`)}">` : ""}
       <h3>${esc(order.brand)} ${esc(order.model)} <span class="portal-order-subtitle">· ${esc(order.license_plate || "без номера")}</span></h3>
       <div class="portal-order-subtitle">${esc(order.client_name)} · ${esc(order.client_phone || "телефон не указан")}</div>
       <p class="portal-order-description">${esc(order.complaint || "Описание не добавлено")}</p>
@@ -152,6 +153,87 @@ function openOrderEditor(orderId) {
   });
 }
 
+function openImagePreview(src, alt = "Фотография автомобиля") {
+  modalRoot.innerHTML = `
+    <div class="portal-image-viewer-backdrop" data-image-viewer>
+      <button class="portal-image-viewer-close" type="button" aria-label="Закрыть">×</button>
+      <img src="${esc(src)}" alt="${esc(alt)}">
+    </div>`;
+  const viewer = modalRoot.querySelector("[data-image-viewer]");
+  const onKeyDown = (event) => {
+    if (event.key === "Escape") close();
+  };
+  const close = () => {
+    modalRoot.innerHTML = "";
+    document.removeEventListener("keydown", onKeyDown);
+  };
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer || event.target.closest(".portal-image-viewer-close")) close();
+  });
+  document.addEventListener("keydown", onKeyDown);
+}
+
+function openSettingsModal() {
+  modalRoot.innerHTML = `
+    <div class="portal-modal-backdrop" data-modal-backdrop>
+      <section class="portal-modal" role="dialog" aria-modal="true">
+        <div class="portal-modal-head"><div><h2>Настройки профиля</h2><p>Управление данными доступа</p></div><button class="portal-modal-close" type="button" data-modal-close>×</button></div>
+        <div class="settings-content">
+          <div class="portal-settings-account"><span>Текущий аккаунт</span><b>${esc(state.user?.email || "—")}</b></div>
+          <p class="portal-settings-note">Email проверяется сервером и должен совпадать с текущей учётной записью.</p>
+          <div class="portal-modal-actions"><button class="portal-button" type="button" data-modal-close>Закрыть</button><button class="portal-button portal-button-primary" type="button" data-open-password>Сменить пароль</button></div>
+        </div>
+      </section>
+    </div>`;
+  const backdrop = modalRoot.querySelector("[data-modal-backdrop]");
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop || event.target.closest("[data-modal-close]")) modalRoot.innerHTML = "";
+  });
+  modalRoot.querySelector("[data-open-password]").addEventListener("click", () => {
+    modalRoot.querySelector(".settings-content").innerHTML = `
+      <form id="passwordChangeForm">
+        <div class="portal-form-grid">
+          <label class="portal-field portal-field-full">Email текущей учётной записи
+            <input name="email" type="email" maxlength="190" required value="${esc(state.user?.email || "")}" autocomplete="username">
+          </label>
+          <label class="portal-field portal-field-full">Новый пароль
+            <input name="password" type="password" minlength="10" required autocomplete="new-password" placeholder="Не менее 10 символов">
+          </label>
+          <label class="portal-field portal-field-full">Повторите новый пароль
+            <input name="password_confirmation" type="password" minlength="10" required autocomplete="new-password">
+          </label>
+        </div>
+        <div class="portal-error" id="passwordChangeError" hidden></div>
+        <div class="portal-modal-actions"><button class="portal-button" type="button" data-modal-close>Отмена</button><button class="portal-button portal-button-primary" type="submit">Сохранить пароль</button></div>
+      </form>`;
+    const form = modalRoot.querySelector("#passwordChangeForm");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const submit = form.querySelector('button[type="submit"]');
+      const error = form.querySelector("#passwordChangeError");
+      submit.disabled = true;
+      error.hidden = true;
+      try {
+        await api("/api/account/password", {
+          method: "PATCH",
+          body: JSON.stringify({
+            email: data.get("email"),
+            password: data.get("password"),
+            password_confirmation: data.get("password_confirmation"),
+          }),
+        });
+        modalRoot.innerHTML = "";
+        toast("Пароль успешно изменён");
+      } catch (requestError) {
+        error.textContent = requestError.message;
+        error.hidden = false;
+        submit.disabled = false;
+      }
+    });
+  });
+}
+
 async function loadDashboard() {
   content.innerHTML = '<div class="portal-loading">Обновление заказов…</div>';
   state.data = await api("/api/employee/dashboard");
@@ -165,6 +247,11 @@ document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListe
 }));
 
 document.getElementById("content").addEventListener("click", (event) => {
+  const preview = event.target.closest("[data-image-preview]");
+  if (preview) {
+    openImagePreview(preview.src, preview.alt);
+    return;
+  }
   const orderButton = event.target.closest("[data-edit-order]");
   const filterButton = event.target.closest("[data-filter]");
   if (orderButton) openOrderEditor(Number(orderButton.dataset.editOrder));
@@ -175,6 +262,7 @@ document.getElementById("content").addEventListener("click", (event) => {
 });
 
 document.getElementById("menuBtn").addEventListener("click", () => document.getElementById("sidebar").classList.toggle("open"));
+document.getElementById("settingsBtn").addEventListener("click", openSettingsModal);
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
   location.assign("/login");

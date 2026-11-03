@@ -780,3 +780,103 @@ button {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ---------- настройки профиля и полноэкранные фото ---------- */
+.portal-sidebar-actions {
+  display: grid;
+  gap: 9px;
+  margin-top: auto;
+}
+.portal-sidebar-bottom {
+  margin-top: 0;
+}
+.portal-settings-button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 39px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #aeb9b0;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+}
+.portal-settings-button:hover {
+  background: #29382f;
+  color: #eff4e9;
+}
+.portal-settings-button span {
+  width: 18px;
+  text-align: center;
+  font-size: 15px;
+}
+.portal-car-photo,
+.portal-order-car-photo {
+  cursor: zoom-in;
+}
+.portal-order-car-photo {
+  display: block;
+  width: 100%;
+  max-height: 170px;
+  margin: 12px 0;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #e8eee7;
+}
+.portal-image-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 58px 24px 24px;
+  background: rgba(8, 14, 11, .95);
+}
+.portal-image-viewer-backdrop img {
+  display: block;
+  max-width: min(96vw, 1500px);
+  max-height: calc(100vh - 86px);
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .4);
+}
+.portal-image-viewer-close {
+  position: absolute;
+  top: 17px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  font-size: 27px;
+  line-height: 1;
+}
+.portal-settings-account {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e7ece5;
+  border-radius: 10px;
+  background: #f8faf6;
+}
+.portal-settings-account span {
+  color: #8b988e;
+  font-size: 9px;
+}
+.portal-settings-account b {
+  color: #304239;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.portal-settings-note {
+  margin: 12px 0 0;
+  color: #849188;
+  font-size: 9px;
+  line-height: 1.55;
+}

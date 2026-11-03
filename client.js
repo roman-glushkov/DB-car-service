@@ -68,7 +68,7 @@ function orderCard(order, compact = false) {
 
 function carCard(car) {
   const photo = car.photo_path
-    ? `<img class="portal-car-photo" src="${esc(car.photo_path)}" alt="${esc(`${car.brand} ${car.model}`)}" />`
+    ? `<img class="portal-car-photo" data-image-preview src="${esc(car.photo_path)}" alt="${esc(`${car.brand} ${car.model}`)}" />`
     : `<div class="portal-car-placeholder">${esc(String(car.brand || "A").slice(0, 1).toUpperCase())}</div>`;
   return `
     <article class="portal-card portal-car-card">
@@ -197,6 +197,78 @@ function openOrderModal() {
   });
 }
 
+function openImagePreview(src, alt = "Фотография автомобиля") {
+  modalRoot.innerHTML = `
+    <div class="portal-image-viewer-backdrop" data-image-viewer>
+      <button class="portal-image-viewer-close" type="button" aria-label="Закрыть">×</button>
+      <img src="${esc(src)}" alt="${esc(alt)}">
+    </div>`;
+  const viewer = modalRoot.querySelector("[data-image-viewer]");
+  const onKeyDown = (event) => {
+    if (event.key === "Escape") close();
+  };
+  const close = () => {
+    modalRoot.innerHTML = "";
+    document.removeEventListener("keydown", onKeyDown);
+  };
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer || event.target.closest(".portal-image-viewer-close")) close();
+  });
+  document.addEventListener("keydown", onKeyDown);
+}
+
+function openSettingsModal() {
+  openModal("Настройки профиля", "Управление данными доступа", `
+    <div class="settings-content">
+      <div class="portal-settings-account"><span>Текущий аккаунт</span><b>${esc(state.user?.email || "—")}</b></div>
+      <p class="portal-settings-note">Email используется для входа в личный кабинет и подтверждается сервером при смене пароля.</p>
+      <div class="portal-modal-actions"><button class="portal-button" type="button" data-modal-close>Закрыть</button><button class="portal-button portal-button-primary" type="button" data-open-password>Сменить пароль</button></div>
+    </div>`);
+  modalRoot.querySelector("[data-open-password]").addEventListener("click", () => {
+    modalRoot.querySelector(".settings-content").innerHTML = `
+      <form id="passwordChangeForm">
+        <div class="portal-form-grid">
+          <label class="portal-field portal-field-full">Email текущей учётной записи
+            <input name="email" type="email" maxlength="190" required value="${esc(state.user?.email || "")}" autocomplete="username">
+          </label>
+          <label class="portal-field portal-field-full">Новый пароль
+            <input name="password" type="password" minlength="10" required autocomplete="new-password" placeholder="Не менее 10 символов">
+          </label>
+          <label class="portal-field portal-field-full">Повторите новый пароль
+            <input name="password_confirmation" type="password" minlength="10" required autocomplete="new-password">
+          </label>
+        </div>
+        <div class="portal-error" id="passwordChangeError" hidden></div>
+        <div class="portal-modal-actions"><button class="portal-button" type="button" data-modal-close>Отмена</button><button class="portal-button portal-button-primary" type="submit">Сохранить пароль</button></div>
+      </form>`;
+    const form = modalRoot.querySelector("#passwordChangeForm");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const submit = form.querySelector('button[type="submit"]');
+      const error = form.querySelector("#passwordChangeError");
+      submit.disabled = true;
+      error.hidden = true;
+      try {
+        await api("/api/account/password", {
+          method: "PATCH",
+          body: JSON.stringify({
+            email: data.get("email"),
+            password: data.get("password"),
+            password_confirmation: data.get("password_confirmation"),
+          }),
+        });
+        modalRoot.innerHTML = "";
+        showToast("Пароль успешно изменён");
+      } catch (requestError) {
+        error.textContent = requestError.message;
+        error.hidden = false;
+        submit.disabled = false;
+      }
+    });
+  });
+}
+
 function showModalError(form, message) {
   let error = form.querySelector(".portal-error");
   if (!error) {
@@ -235,6 +307,11 @@ document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListe
 }));
 
 document.getElementById("content").addEventListener("click", async (event) => {
+  const preview = event.target.closest("[data-image-preview]");
+  if (preview) {
+    openImagePreview(preview.src, preview.alt);
+    return;
+  }
   const action = event.target.closest("[data-action]")?.dataset.action;
   const orderButton = event.target.closest("[data-order-details]");
   if (action === "new-car") openCarModal();
@@ -255,6 +332,7 @@ document.getElementById("content").addEventListener("change", async (event) => {
 });
 
 document.getElementById("menuBtn").addEventListener("click", () => document.getElementById("sidebar").classList.toggle("open"));
+document.getElementById("settingsBtn").addEventListener("click", openSettingsModal);
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
   location.assign("/login");

@@ -819,6 +819,37 @@ app.patch(
   })
 );
 
+// Смена пароля доступна каждой авторизованной роли.
+app.patch(
+  "/api/account/password",
+  requireRole("admin", "client", "employee"),
+  route(async (req, res) => {
+    const email = cleanText(req.body?.email, 190).toLowerCase();
+    const sessionEmail = String(req.user.email || "");
+    const password = String(req.body?.password || "");
+    const passwordConfirmation = String(req.body?.password_confirmation || "");
+
+    if (!email || email !== sessionEmail.toLowerCase()) {
+      throw httpError(403, "Email должен совпадать с текущей учётной записью.");
+    }
+    if (password.length < 10) {
+      throw httpError(400, "Новый пароль должен содержать минимум 10 символов.");
+    }
+    if (password !== passwordConfirmation) {
+      throw httpError(400, "Пароли не совпадают.");
+    }
+
+    const result = await query(
+      "UPDATE user_accounts SET password_hash = ? WHERE account_id = ? AND email = ? AND is_active = 1",
+      [hashPassword(password), req.user.account_id, sessionEmail]
+    );
+    if (!result.affectedRows) {
+      throw httpError(409, "Учётная запись изменилась. Обновите страницу и повторите попытку.");
+    }
+    res.json({ ok: true });
+  })
+);
+
 // Публичный административный namespace: /api/admin/*.
 // Переписываем URL до маршрутизации, сохраняя прежние обработчики админки.
 app.use((req, _res, next) => {
@@ -977,7 +1008,7 @@ app.get(
   route(async (_req, res) => {
     const rows = await query(`
     SELECT o.order_id, o.car_id, o.employee_id, o.status_id, o.created_at, o.planned_finish_date, o.mileage, o.finished_at, o.complaint, o.diagnosis, o.comment,
-           car.license_plate, car.brand, car.model, car.photo_path, c.full_name AS client_name, e.full_name AS employee_name, s.name AS status_name,
+           car.license_plate, car.vin, car.brand, car.model, car.photo_path, c.full_name AS client_name, e.full_name AS employee_name, s.name AS status_name,
            COALESCE((SELECT SUM(ow.quantity * ow.price) FROM order_works ow WHERE ow.order_id = o.order_id), 0) + COALESCE((SELECT SUM(op.quantity * op.price) FROM order_parts op WHERE op.order_id = o.order_id), 0) AS order_total
     FROM orders o
     JOIN cars car ON car.car_id = o.car_id
@@ -1263,6 +1294,7 @@ async function saveEmployee(req, res, employeeId = null) {
   const fullName = cleanText(body.full_name, 150);
   const position = cleanText(body.position, 50);
   const phone = cleanText(body.phone, 20) || null;
+  const email = cleanText(body.email, 190).toLowerCase();
   const isActive =
     body.is_active === false || Number(body.is_active) === 0 ? 0 : 1;
   const skillIds = [
@@ -1272,48 +1304,86 @@ async function saveEmployee(req, res, employeeId = null) {
       )
     ),
   ];
-  if (!fullName || !position) throw httpError(400, "Укажите ФИО и должность");
+
+  if (!fullName || !position) throw httpError(400, "Укажите ФИО и должность.");
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw httpError(400, "Укажите корректный email сотрудника.");
+  }
+
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
+
     if (skillIds.length) {
       const placeholders = skillIds.map(() => "?").join(",");
       const valid = await conn.query(
         `SELECT work_type_id FROM work_types WHERE work_type_id IN (${placeholders})`,
         skillIds
       );
-      if (valid.length !== skillIds.length)
-        throw httpError(400, "Работы не существуют");
+      if (valid.length !== skillIds.length) {
+        throw httpError(400, "Одна или несколько выбранных работ не существуют.");
+      }
     }
+
     let id = employeeId;
+    let accountCreated = false;
     if (id) {
       const existing = await conn.query(
-        "SELECT employee_id FROM employees WHERE employee_id = ?",
+        "SELECT employee_id FROM employees WHERE employee_id = ? FOR UPDATE",
         [id]
       );
-      if (!existing.length) throw httpError(404, "Сотрудник не найден");
+      if (!existing.length) throw httpError(404, "Сотрудник не найден.");
       await conn.query(
         "UPDATE employees SET full_name = ?, position = ?, phone = ?, is_active = ? WHERE employee_id = ?",
         [fullName, position, phone, isActive, id]
       );
+
+      const accounts = await conn.query(
+        "SELECT account_id FROM user_accounts WHERE employee_id = ? FOR UPDATE",
+        [id]
+      );
+      if (accounts.length) {
+        await conn.query(
+          "UPDATE user_accounts SET email = ?, display_name = ? WHERE employee_id = ?",
+          [email, fullName, id]
+        );
+      } else {
+        await conn.query(
+          `INSERT INTO user_accounts (email, password_hash, role, display_name, employee_id)
+           VALUES (?, ?, 'employee', ?, ?)`,
+          [email, hashPassword("qwerty1234"), fullName, id]
+        );
+        accountCreated = true;
+      }
     } else {
       const result = await conn.query(
         "INSERT INTO employees (full_name, position, phone, is_active) VALUES (?, ?, ?, ?)",
         [fullName, position, phone, isActive]
       );
       id = Number(result.insertId);
+      await conn.query(
+        `INSERT INTO user_accounts (email, password_hash, role, display_name, employee_id)
+         VALUES (?, ?, 'employee', ?, ?)`,
+        [email, hashPassword("qwerty1234"), fullName, id]
+      );
+      accountCreated = true;
     }
-    await conn.query("DELETE FROM employee_work_types WHERE employee_id = ?", [
-      id,
-    ]);
+
+    await conn.query("DELETE FROM employee_work_types WHERE employee_id = ?", [id]);
     for (const skillId of skillIds) {
       await conn.query(
         "INSERT INTO employee_work_types (employee_id, work_type_id) VALUES (?, ?)",
         [id, skillId]
       );
     }
+
     await conn.commit();
-    res.status(employeeId ? 200 : 201).json({ ok: true, employee_id: id });
+    res.status(employeeId ? 200 : 201).json({
+      ok: true,
+      employee_id: id,
+      account_created: accountCreated,
+      default_password: accountCreated ? "qwerty1234" : undefined,
+    });
   } catch (error) {
     await conn.rollback();
     throw error;
@@ -1327,10 +1397,11 @@ app.get(
   route(async (_req, res) => {
     res.json(
       await query(`
-    SELECT e.employee_id, e.full_name, e.position, e.phone, e.is_active,
+    SELECT e.employee_id, e.full_name, e.position, e.phone, e.is_active, a.email,
            (SELECT GROUP_CONCAT(w.name ORDER BY w.name SEPARATOR ', ') FROM employee_work_types ewt JOIN work_types w ON w.work_type_id = ewt.work_type_id WHERE ewt.employee_id = e.employee_id) AS skills,
            (SELECT GROUP_CONCAT(ewt.work_type_id ORDER BY ewt.work_type_id SEPARATOR ',') FROM employee_work_types ewt WHERE ewt.employee_id = e.employee_id) AS skill_ids
-    FROM employees e ORDER BY e.is_active DESC, e.full_name
+    FROM employees e LEFT JOIN user_accounts a ON a.employee_id = e.employee_id
+    ORDER BY e.is_active DESC, e.full_name
   `)
     );
   })
@@ -1374,6 +1445,48 @@ app.post(
   })
 );
 
+app.post(
+  "/api/clients",
+  route(async (req, res) => {
+    const fullName = cleanText(req.body?.full_name, 150);
+    const phone = cleanText(req.body?.phone, 20);
+    const email = cleanText(req.body?.email, 100).toLowerCase();
+    if (!fullName || !phone) {
+      throw httpError(400, "Укажите ФИО и телефон клиента.");
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      throw httpError(400, "Укажите корректный email клиента.");
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const clientResult = await conn.query(
+        "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?)",
+        [fullName, phone, email]
+      );
+      const clientId = Number(clientResult.insertId);
+      await conn.query(
+        `INSERT INTO user_accounts (email, password_hash, role, display_name, client_id)
+         VALUES (?, ?, 'client', ?, ?)`,
+        [email, hashPassword("qwerty1234"), fullName, clientId]
+      );
+      await conn.commit();
+      res.status(201).json({
+        ok: true,
+        client_id: clientId,
+        account_created: true,
+        default_password: "qwerty1234",
+      });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
+  })
+);
+
 app.get(
   "/api/clients",
   route(async (_req, res) => {
@@ -1409,6 +1522,71 @@ app.get(
   })
 );
 
+app.post(
+  "/api/work-types",
+  route(async (req, res) => {
+    const name = cleanText(req.body?.name, 150);
+    const price = Number(req.body?.default_price);
+    const duration =
+      req.body?.estimated_duration === "" || req.body?.estimated_duration == null
+        ? null
+        : Number(req.body.estimated_duration);
+    if (!name) throw httpError(400, "Укажите название работы.");
+    if (!Number.isFinite(price) || price < 0) {
+      throw httpError(400, "Базовая цена должна быть неотрицательным числом.");
+    }
+    if (duration !== null && (!Number.isSafeInteger(duration) || duration < 1)) {
+      throw httpError(400, "Время должно быть целым числом от 1 минуты.");
+    }
+    const result = await query(
+      "INSERT INTO work_types (name, default_price, estimated_duration) VALUES (?, ?, ?)",
+      [name, price, duration]
+    );
+    res.status(201).json({ ok: true, work_type_id: Number(result.insertId) });
+  })
+);
+
+app.patch(
+  "/api/work-types/:id",
+  route(async (req, res) => {
+    const workTypeId = positiveId(req.params.id, "вида работы");
+    const existingRows = await query(
+      "SELECT work_type_id, name, default_price, estimated_duration FROM work_types WHERE work_type_id = ?",
+      [workTypeId]
+    );
+    if (!existingRows.length) throw httpError(404, "Работа не найдена.");
+    const existing = existingRows[0];
+    const name =
+      req.body?.name === undefined
+        ? existing.name
+        : cleanText(req.body.name, 150);
+    const price =
+      req.body?.default_price === undefined
+        ? Number(existing.default_price)
+        : Number(req.body.default_price);
+    const duration =
+      req.body?.estimated_duration === undefined
+        ? existing.estimated_duration == null
+          ? null
+          : Number(existing.estimated_duration)
+        : req.body.estimated_duration === "" || req.body.estimated_duration == null
+        ? null
+        : Number(req.body.estimated_duration);
+    if (!name) throw httpError(400, "Укажите название работы.");
+    if (!Number.isFinite(price) || price < 0) {
+      throw httpError(400, "Базовая цена должна быть неотрицательным числом.");
+    }
+    if (duration !== null && (!Number.isSafeInteger(duration) || duration < 1)) {
+      throw httpError(400, "Время должно быть целым числом от 1 минуты.");
+    }
+    await query(
+      "UPDATE work_types SET name = ?, default_price = ?, estimated_duration = ? WHERE work_type_id = ?",
+      [name, price, duration, workTypeId]
+    );
+    res.json({ ok: true, work_type_id: workTypeId });
+  })
+);
+
 app.get(
   "/api/parts",
   route(async (_req, res) => {
@@ -1417,6 +1595,72 @@ app.get(
         "SELECT part_id, name, part_type, article, manufacturer, stock_quantity, price FROM parts ORDER BY name"
       )
     );
+  })
+);
+
+app.get(
+  "/api/payments/stats",
+  route(async (_req, res) => {
+    const [monthRows, yearRows, monthSeries, workRanking] = await Promise.all([
+      query(
+        `SELECT COALESCE(SUM(amount), 0) AS revenue
+           FROM payments
+          WHERE payment_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+            AND payment_date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)`
+      ),
+      query(
+        `SELECT COALESCE(SUM(amount), 0) AS revenue
+           FROM payments
+          WHERE payment_date >= MAKEDATE(YEAR(CURDATE()), 1)
+            AND payment_date < MAKEDATE(YEAR(CURDATE()) + 1, 1)`
+      ),
+      query(
+        `WITH RECURSIVE months AS (
+           SELECT DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 11 MONTH) AS month_start
+           UNION ALL
+           SELECT DATE_ADD(month_start, INTERVAL 1 MONTH)
+             FROM months
+            WHERE month_start < DATE_FORMAT(CURDATE(), '%Y-%m-01')
+         )
+         SELECT DATE_FORMAT(months.month_start, '%Y-%m') AS month_key,
+                YEAR(months.month_start) AS year_number,
+                MONTH(months.month_start) AS month_number,
+                COALESCE(SUM(payments.amount), 0) AS revenue
+           FROM months
+           LEFT JOIN payments
+             ON payments.payment_date >= months.month_start
+            AND payments.payment_date < DATE_ADD(months.month_start, INTERVAL 1 MONTH)
+          GROUP BY months.month_start
+          ORDER BY months.month_start`
+      ),
+      query(
+        `SELECT wt.work_type_id, wt.name,
+                COALESCE(SUM(ow.quantity * ow.price), 0) AS revenue,
+                COUNT(DISTINCT ow.order_id) AS order_count
+           FROM order_works ow
+           JOIN work_types wt ON wt.work_type_id = ow.work_type_id
+          GROUP BY wt.work_type_id, wt.name
+          ORDER BY revenue DESC, wt.name ASC
+          LIMIT 7`
+      ),
+    ]);
+
+    res.json({
+      current_month_revenue: Number(monthRows[0]?.revenue || 0),
+      current_year_revenue: Number(yearRows[0]?.revenue || 0),
+      monthly_revenue: monthSeries.map((row) => ({
+        month_key: row.month_key,
+        year: Number(row.year_number),
+        month: Number(row.month_number),
+        revenue: Number(row.revenue),
+      })),
+      work_ranking: workRanking.map((row) => ({
+        work_type_id: Number(row.work_type_id),
+        name: row.name,
+        revenue: Number(row.revenue),
+        order_count: Number(row.order_count),
+      })),
+    });
   })
 );
 
