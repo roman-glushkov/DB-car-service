@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "create-account": "node scripts/create-account.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

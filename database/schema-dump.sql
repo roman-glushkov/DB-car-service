@@ -1,3 +1,6 @@
+-- ВНИМАНИЕ: это исходный снимок старой схемы (10 таблиц), не актуальный дамп БД после миграций.
+-- Для развёртывания с нуля примените migrations/002_skills_and_order_events.sql и migrations/003_user_accounts.sql.
+-- Для актуального дампа используйте mysqldump с действующей базы autoservice.
 -- MariaDB dump 10.19  Distrib 10.4.18-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: autoservice

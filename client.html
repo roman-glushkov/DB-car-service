@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#17231e" />
+    <title>AutoPro — кабинет клиента</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/portal.css" />
+    <script src="/client.js" defer></script>
+  </head>
+  <body>
+    <div class="portal-shell">
+      <aside class="portal-sidebar" id="sidebar">
+        <a class="portal-brand" href="/client"
+          ><span class="portal-brand-mark">A</span
+          ><span><strong>AutoPro</strong><small>CLIENT SPACE</small></span></a
+        >
+        <div class="portal-nav-label">МОЙ АВТОСЕРВИС</div>
+        <nav class="portal-nav">
+          <button class="active" data-tab="overview">
+            <span class="nav-glyph">⌂</span>Обзор
+          </button>
+          <button data-tab="cars">
+            <span class="nav-glyph">▣</span>Мои автомобили
+          </button>
+          <button data-tab="orders">
+            <span class="nav-glyph">▤</span>Мои заказы
+          </button>
+          <button data-tab="history">
+            <span class="nav-glyph">◷</span>История обслуживания
+          </button>
+        </nav>
+        <div class="portal-sidebar-bottom">
+          <span class="portal-user-avatar" id="userInitials">КЛ</span>
+          <span class="portal-user-copy"
+            ><b id="sidebarUserName">Клиент</b
+            ><small>Личный кабинет</small></span
+          >
+          <button class="portal-logout" id="logoutBtn" title="Выйти">↗</button>
+        </div>
+      </aside>
+      <main class="portal-main">
+        <header class="portal-topbar">
+          <button class="portal-mobile-menu" id="menuBtn" aria-label="Меню">
+            ☰
+          </button>
+          <div class="portal-breadcrumb">
+            AutoPro <b>/</b> <strong id="pageTitle">Обзор</strong>
+          </div>
+          <div class="portal-top-actions">
+            <span class="portal-date" id="todayLabel"></span
+            ><span class="portal-user-avatar" id="topInitials">КЛ</span>
+          </div>
+        </header>
+        <div class="portal-content" id="content">
+          <div class="portal-loading">Загрузка личного кабинета…</div>
+        </div>
+      </main>
+    </div>
+    <div id="modalRoot"></div>
+    <div class="portal-toast" id="toast"></div>
+  </body>
+</html>
