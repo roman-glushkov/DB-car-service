@@ -833,7 +833,10 @@ app.patch(
       throw httpError(403, "Email должен совпадать с текущей учётной записью.");
     }
     if (password.length < 10) {
-      throw httpError(400, "Новый пароль должен содержать минимум 10 символов.");
+      throw httpError(
+        400,
+        "Новый пароль должен содержать минимум 10 символов."
+      );
     }
     if (password !== passwordConfirmation) {
       throw httpError(400, "Пароли не совпадают.");
@@ -844,7 +847,10 @@ app.patch(
       [hashPassword(password), req.user.account_id, sessionEmail]
     );
     if (!result.affectedRows) {
-      throw httpError(409, "Учётная запись изменилась. Обновите страницу и повторите попытку.");
+      throw httpError(
+        409,
+        "Учётная запись изменилась. Обновите страницу и повторите попытку."
+      );
     }
     res.json({ ok: true });
   })
@@ -1321,7 +1327,10 @@ async function saveEmployee(req, res, employeeId = null) {
         skillIds
       );
       if (valid.length !== skillIds.length) {
-        throw httpError(400, "Одна или несколько выбранных работ не существуют.");
+        throw httpError(
+          400,
+          "Одна или несколько выбранных работ не существуют."
+        );
       }
     }
 
@@ -1369,7 +1378,9 @@ async function saveEmployee(req, res, employeeId = null) {
       accountCreated = true;
     }
 
-    await conn.query("DELETE FROM employee_work_types WHERE employee_id = ?", [id]);
+    await conn.query("DELETE FROM employee_work_types WHERE employee_id = ?", [
+      id,
+    ]);
     for (const skillId of skillIds) {
       await conn.query(
         "INSERT INTO employee_work_types (employee_id, work_type_id) VALUES (?, ?)",
@@ -1528,14 +1539,18 @@ app.post(
     const name = cleanText(req.body?.name, 150);
     const price = Number(req.body?.default_price);
     const duration =
-      req.body?.estimated_duration === "" || req.body?.estimated_duration == null
+      req.body?.estimated_duration === "" ||
+      req.body?.estimated_duration == null
         ? null
         : Number(req.body.estimated_duration);
     if (!name) throw httpError(400, "Укажите название работы.");
     if (!Number.isFinite(price) || price < 0) {
       throw httpError(400, "Базовая цена должна быть неотрицательным числом.");
     }
-    if (duration !== null && (!Number.isSafeInteger(duration) || duration < 1)) {
+    if (
+      duration !== null &&
+      (!Number.isSafeInteger(duration) || duration < 1)
+    ) {
       throw httpError(400, "Время должно быть целым числом от 1 минуты.");
     }
     const result = await query(
@@ -1569,14 +1584,18 @@ app.patch(
         ? existing.estimated_duration == null
           ? null
           : Number(existing.estimated_duration)
-        : req.body.estimated_duration === "" || req.body.estimated_duration == null
+        : req.body.estimated_duration === "" ||
+          req.body.estimated_duration == null
         ? null
         : Number(req.body.estimated_duration);
     if (!name) throw httpError(400, "Укажите название работы.");
     if (!Number.isFinite(price) || price < 0) {
       throw httpError(400, "Базовая цена должна быть неотрицательным числом.");
     }
-    if (duration !== null && (!Number.isSafeInteger(duration) || duration < 1)) {
+    if (
+      duration !== null &&
+      (!Number.isSafeInteger(duration) || duration < 1)
+    ) {
       throw httpError(400, "Время должно быть целым числом от 1 минуты.");
     }
     await query(
