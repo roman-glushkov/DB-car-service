@@ -4,36 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#17231e" />
-    <title>AutoPro — кабинет клиента</title>
+    <title>AutoPro — кабинет сотрудника</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/portal.css" />
-    <script src="/client.js" defer></script>
+    <link rel="stylesheet" href="/css/portal.css" />
+    <script src="/js/common/api.js" defer></script>
+    <script src="/js/employee.js" defer></script>
   </head>
-  <body>
+  <body data-api-scope="employee">
     <div class="portal-shell">
       <aside class="portal-sidebar" id="sidebar">
-        <a class="portal-brand" href="/client"
+        <a class="portal-brand" href="/employee"
           ><span class="portal-brand-mark">A</span
-          ><span><strong>AutoPro</strong><small>CLIENT SPACE</small></span></a
+          ><span><strong>AutoPro</strong><small>TEAM WORKSPACE</small></span></a
         >
-        <div class="portal-nav-label">МОЙ АВТОСЕРВИС</div>
+        <div class="portal-nav-label">РАБОЧЕЕ МЕСТО</div>
         <nav class="portal-nav">
           <button class="active" data-tab="overview">
-            <span class="nav-glyph">⌂</span>Обзор
+            <span class="nav-glyph">⌂</span>Мой день
           </button>
-          <button data-tab="cars">
-            <span class="nav-glyph">▣</span>Мои автомобили
+          <button data-tab="active">
+            <span class="nav-glyph">▤</span>Активные заказы
           </button>
-          <button data-tab="orders">
-            <span class="nav-glyph">▤</span>Мои заказы
+          <button data-tab="upcoming">
+            <span class="nav-glyph">◷</span>Предстоящие работы
           </button>
-          <button data-tab="history">
-            <span class="nav-glyph">◷</span>История обслуживания
+          <button data-tab="completed">
+            <span class="nav-glyph">✓</span>Завершённые
           </button>
         </nav>
         <div class="portal-sidebar-actions">
@@ -41,10 +42,10 @@
             <span>⚙</span>Настройки
           </button>
           <div class="portal-sidebar-bottom">
-            <span class="portal-user-avatar" id="userInitials">КЛ</span>
+            <span class="portal-user-avatar" id="userInitials">МА</span>
             <span class="portal-user-copy"
-              ><b id="sidebarUserName">Клиент</b
-              ><small>Личный кабинет</small></span
+              ><b id="sidebarUserName">Сотрудник</b
+              ><small id="sidebarPosition">Мастер</small></span
             >
             <button class="portal-logout" id="logoutBtn" title="Выйти">
               ↗
@@ -58,15 +59,15 @@
             ☰
           </button>
           <div class="portal-breadcrumb">
-            AutoPro <b>/</b> <strong id="pageTitle">Обзор</strong>
+            AutoPro <b>/</b> <strong id="pageTitle">Мой день</strong>
           </div>
           <div class="portal-top-actions">
             <span class="portal-date" id="todayLabel"></span
-            ><span class="portal-user-avatar" id="topInitials">КЛ</span>
+            ><span class="portal-user-avatar" id="topInitials">МА</span>
           </div>
         </header>
         <div class="portal-content" id="content">
-          <div class="portal-loading">Загрузка личного кабинета…</div>
+          <div class="portal-loading">Загрузка рабочего кабинета…</div>
         </div>
       </main>
     </div>

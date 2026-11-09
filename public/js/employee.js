@@ -1,24 +1,8 @@
+const { api, esc, money, shortDate } = window;
 const state = { user: null, data: null, tab: "overview" };
 const content = document.getElementById("content");
 const modalRoot = document.getElementById("modalRoot");
 
-const esc = (value) =>
-  String(value ?? "").replace(
-    /[&<>"']/g,
-    (char) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
-        char
-      ])
-  );
-const money = (value) => `${Number(value || 0).toLocaleString("ru-RU")} ₽`;
-const shortDate = (value) =>
-  value
-    ? new Date(value).toLocaleDateString("ru-RU", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "Не указана";
 const initials = (name) =>
   String(name || "МА")
     .split(/\s+/)
@@ -28,24 +12,6 @@ const initials = (name) =>
     .toUpperCase();
 const today = new Date();
 today.setHours(0, 0, 0, 0);
-
-async function api(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    credentials: "same-origin",
-    headers: {
-      ...(options.body && !(options.body instanceof FormData)
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...(options.headers || {}),
-    },
-  });
-  const data = await response.json().catch(() => ({}));
-  if (response.status === 401) location.assign("/employee/login");
-  if (!response.ok)
-    throw new Error(data.error || `Ошибка запроса ${response.status}`);
-  return data;
-}
 
 function toast(message) {
   const node = document.getElementById("toast");
