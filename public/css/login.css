@@ -387,3 +387,31 @@
     text-align: right;
   }
 }
+
+.login-text-button{border:0;background:none;color:#496b30;font:inherit;font-weight:800;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* В публичном интерфейсе регистрация доступна только клиенту. */
+[hidden] { display: none !important; }
+.staff-access {
+  margin-top: 15px;
+  padding: 16px 17px;
+  border: 1px solid #e2e8e0;
+  border-radius: 14px;
+  background: #f7f9f5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+}
+.staff-access > span { color: #536258; font-size: 11px; font-weight: 750; }
+.staff-access a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #36542d;
+  text-decoration: none;
+}
+.staff-access a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.staff-access small { font-size: 10px; line-height: 1.5; color: #87958b; }

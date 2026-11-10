@@ -44,19 +44,11 @@
           </div>
           <div id="roleChooser" class="role-chooser">
             <span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span>
-            <h2>Выберите свой кабинет</h2>
+            <h2>Добро пожаловать в AutoPro</h2>
             <p class="section-description">
-              Войдите под своей ролью, чтобы продолжить работу.
+              Клиенты могут войти или зарегистрироваться. Доступ персоналу выдаёт администратор.
             </p>
             <div class="role-cards">
-              <a class="role-card" href="/admin/login">
-                <span class="role-icon role-admin">⌘</span>
-                <span class="role-card-copy"
-                  ><b>Администратор</b
-                  ><small>Управление автосервисом и заказами</small></span
-                >
-                <span class="role-arrow">↗</span>
-              </a>
               <a class="role-card" href="/client/login">
                 <span class="role-icon role-client">⌂</span>
                 <span class="role-card-copy"
@@ -65,14 +57,11 @@
                 >
                 <span class="role-arrow">↗</span>
               </a>
-              <a class="role-card" href="/employee/login">
-                <span class="role-icon role-employee">⚙</span>
-                <span class="role-card-copy"
-                  ><b>Сотрудник</b
-                  ><small>Назначенные заказы и рабочие задачи</small></span
-                >
-                <span class="role-arrow">↗</span>
-              </a>
+            </div>
+            <div class="staff-access">
+              <span>Для сотрудников и администраторов</span>
+              <a href="/staff/login">Войти как персонал <span aria-hidden="true">↗</span></a>
+              <small>Учётные записи персонала создаёт только администратор.</small>
             </div>
             <div class="login-footnote">
               <span class="secure-dot"></span> Защищённый доступ · Авторизация
@@ -81,7 +70,7 @@
           </div>
 
           <div id="loginFormPanel" class="login-form-panel" hidden>
-            <a class="back-link" href="/login">← Все кабинеты</a>
+            <a class="back-link" href="/login">← На главную</a>
             <span class="eyebrow" id="roleEyebrow">ВХОД В СИСТЕМУ</span>
             <h2 id="loginTitle">Вход в AutoPro</h2>
             <p class="section-description" id="loginDescription">
@@ -120,10 +109,32 @@
                 <span>Войти в кабинет</span><b>→</b>
               </button>
             </form>
-            <div class="login-footnote">
-              <span class="secure-dot"></span> Доступ предоставляется
-              администратором автосервиса
+            <div id="clientRegisterLink" class="login-footnote" hidden>
+              Нет аккаунта? <button type="button" id="showRegister" class="login-text-button">Зарегистрироваться</button>
             </div>
+            <div class="login-footnote" id="loginAccessNote">
+              <span class="secure-dot"></span> Доступ сотрудников и администраторов предоставляется автосервисом
+            </div>
+          </div>
+          <div id="registrationPanel" class="login-form-panel" hidden>
+            <button type="button" class="back-link login-text-button" id="backToLogin">← Вернуться ко входу</button>
+            <span class="eyebrow">НОВЫЙ КЛИЕНТ</span>
+            <h2>Создать аккаунт</h2>
+            <p class="section-description">Зарегистрируйтесь, чтобы управлять автомобилями и заявками.</p>
+            <form id="registrationForm" class="login-form">
+              <label class="form-label" for="registerName">ФИО</label>
+              <input id="registerName" name="full_name" required maxlength="150" placeholder="Иванов Иван Иванович" autocomplete="name" />
+              <label class="form-label" for="registerPhone">Телефон</label>
+              <input id="registerPhone" name="phone" required maxlength="20" placeholder="+7 999 123-45-67" autocomplete="tel" />
+              <label class="form-label" for="registerEmail">Электронная почта</label>
+              <input id="registerEmail" name="email" type="email" required maxlength="190" placeholder="name@example.com" autocomplete="email" />
+              <label class="form-label" for="registerPassword">Пароль (от 10 символов)</label>
+              <input id="registerPassword" name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password" />
+              <label class="form-label" for="registerConfirm">Повторите пароль</label>
+              <input id="registerConfirm" name="password_confirmation" type="password" required minlength="10" maxlength="128" autocomplete="new-password" />
+              <div class="form-error" id="registerError" role="alert" hidden></div>
+              <button type="submit" class="primary-button login-submit"><span>Создать аккаунт</span><b>→</b></button>
+            </form>
           </div>
         </div>
         <footer class="login-footer">

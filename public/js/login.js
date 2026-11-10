@@ -10,13 +10,18 @@ const roleConfig = {
     label: "КЛИЕНТ",
   },
   employee: {
-    title: "Кабинет сотрудника",
+    title: "Вход сотрудника",
     description: "Назначенные заказы и предстоящие работы.",
     label: "СОТРУДНИК",
   },
+  staff: {
+    title: "Вход для персонала",
+    description: "Вход только по учётной записи, созданной администратором.",
+    label: "СОТРУДНИКИ И АДМИНИСТРАТОРЫ",
+  },
 };
 
-const roleMatch = location.pathname.match(/^\/(admin|client|employee)\/login$/);
+const roleMatch = location.pathname.match(/^\/(admin|client|employee|staff)\/login$/);
 const role = roleMatch?.[1] || null;
 const chooser = document.getElementById("roleChooser");
 const formPanel = document.getElementById("loginFormPanel");
@@ -24,6 +29,7 @@ const formPanel = document.getElementById("loginFormPanel");
 if (role && roleConfig[role]) {
   chooser.hidden = true;
   formPanel.hidden = false;
+  if (role === "client") document.getElementById("clientRegisterLink").hidden = false;
   document.getElementById("roleEyebrow").textContent = roleConfig[role].label;
   document.getElementById("loginTitle").textContent = roleConfig[role].title;
   document.getElementById("loginDescription").textContent =
@@ -57,12 +63,12 @@ document
         body: JSON.stringify({
           email: form.email.value.trim(),
           password: form.password.value,
-          role,
+          role: role === "staff" ? null : role,
         }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok && response.status === 403 && data.redirect) {
-        location.assign(`${data.redirect}/login`);
+        location.assign(data.redirect === "/client" ? "/client/login" : "/staff/login");
         return;
       }
       if (!response.ok)
@@ -75,3 +81,40 @@ document
       button.querySelector("span").textContent = "Войти в кабинет";
     }
   });
+
+const registrationPanel = document.getElementById("registrationPanel");
+document.getElementById("showRegister")?.addEventListener("click", () => {
+  formPanel.hidden = true;
+  registrationPanel.hidden = false;
+});
+document.getElementById("backToLogin")?.addEventListener("click", () => {
+  registrationPanel.hidden = true;
+  formPanel.hidden = false;
+});
+document.getElementById("registrationForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const error = document.getElementById("registerError");
+  const button = form.querySelector('button[type="submit"]');
+  error.hidden = true;
+  if (form.password.value !== form.password_confirmation.value) {
+    error.textContent = "Пароли не совпадают.";
+    error.hidden = false;
+    return;
+  }
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(new FormData(form))),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Не удалось зарегистрироваться.");
+    location.assign(data.redirect || "/client");
+  } catch (requestError) {
+    error.textContent = requestError.message;
+    error.hidden = false;
+    button.disabled = false;
+  }
+});

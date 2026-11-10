@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { query } = require("../config/db");
+const { query, pool } = require("../config/db");
+const { text, phone } = require("../utils/record-validation");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { httpError, route, cleanText } = require("../utils/validators");
 const {
@@ -10,6 +11,38 @@ const {
   writeSessionCookie,
   clearSessionCookie,
 } = require("../middleware/auth");
+
+// Public registration creates only a client account; roles cannot be supplied by the caller.
+router.post("/auth/register", route(async (req, res) => {
+  const fullName = text(req.body?.full_name, "ФИО", 150);
+  const contactPhone = phone(req.body?.phone);
+  const email = cleanText(req.body?.email, 190).toLowerCase();
+  const password = String(req.body?.password || "");
+  const confirmation = String(req.body?.password_confirmation || "");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw httpError(400, "Укажите корректный email.");
+  if (password.length < 10 || password.length > 128) throw httpError(400, "Пароль должен содержать от 10 до 128 символов.");
+  if (password !== confirmation) throw httpError(400, "Пароли не совпадают.");
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const existing = await conn.query("SELECT account_id FROM user_accounts WHERE email = ? LIMIT 1", [email]);
+    if (existing.length) throw httpError(409, "Эта почта уже зарегистрирована. Войдите в кабинет.");
+    const result = await conn.query("INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?)", [fullName, contactPhone, email]);
+    const account = await conn.query(
+      "INSERT INTO user_accounts (email, password_hash, role, display_name, client_id) VALUES (?, ?, 'client', ?, ?)",
+      [email, hashPassword(password), fullName, Number(result.insertId)]
+    );
+    await conn.commit();
+    writeSessionCookie(res, Number(account.insertId));
+    res.status(201).json({ ok: true, redirect: "/client" });
+  } catch (error) {
+    await conn.rollback();
+    if (error.code === "ER_DUP_ENTRY") throw httpError(409, "Email уже используется.");
+    throw error;
+  } finally {
+    conn.release();
+  }
+}));
 
 router.post(
   "/auth/login",

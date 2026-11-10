@@ -1,3 +1,4 @@
+document.getElementById("currentDate").textContent = new Date().toLocaleDateString("ru-RU", {weekday:"short",day:"numeric",month:"long",year:"numeric"});
 const pages = {
   orders,
   clients,
@@ -59,6 +60,14 @@ document.getElementById("content").addEventListener("click", async (event) => {
   try {
     if (button.dataset.action === "create-order") await openOrderModal();
     if (button.dataset.action === "create-client") await openClientModal();
+    if (button.dataset.action === "edit-client") await openClientModal(Number(button.dataset.id));
+    if (button.dataset.action === "create-car") await openCarModal();
+    if (button.dataset.action === "edit-car") await openCarModal(Number(button.dataset.id));
+    if (button.dataset.action === "create-part") await openPartModal();
+    if (button.dataset.action === "create-payment") await openPaymentModal();
+    if (button.dataset.action === "edit-part") await openPartModal(Number(button.dataset.id));
+    if (button.dataset.action === "delete-record") await deleteAdminRecord(button.dataset.kind, Number(button.dataset.id));
+    if (button.dataset.action === "remove-photo") await removeCarPhoto(Number(button.dataset.id));
     if (button.dataset.action === "create-work") await openWorkModal();
     if (button.dataset.action === "edit-work")
       await openWorkModal(Number(button.dataset.id));

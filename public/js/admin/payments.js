@@ -19,7 +19,7 @@ async function payments() {
         <div class="muted-mini">${esc(item.client_name)}</div>
       </td>
       <td><b>${money(item.amount)}</b></td>
-      <td>${esc(item.payment_method || "—")}</td>
+      <td>${esc(item.payment_method || "—")}</td><td><button class="action-btn" data-action="delete-record" data-kind="payments" data-id="${Number(item.payment_id)}">Удалить</button></td>
     </tr>`
     )
     .join("");
@@ -80,9 +80,9 @@ async function payments() {
 
   return page(
     "Оплаты",
-    ["Дата", "Заказ", "Сумма", "Способ"],
+    ["Дата", "Заказ", "Сумма", "Способ", "Действия"],
     rows,
-    "",
+    '<button class="action-btn action-btn-primary" data-action="create-payment">+ Внести оплату</button>',
     tableTools("Поиск по заказу, автомобилю или клиенту"),
     analytics
   );

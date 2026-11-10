@@ -84,23 +84,27 @@ async function openEmployeeModal(employeeId = null) {
           }>
           Сотрудник активен и может получать новые заказы
         </label>
-        <div class="app-field app-field-full">
-          <span>Навыки — виды работ, которые сотрудник может выполнять</span>
-          <div class="skill-list">
-            ${options.workTypes
-              .map(
-                (work) => `
-              <label class="skill-option">
-                <input type="checkbox" name="work_type_ids" value="${Number(
-                  work.work_type_id
-                )}" ${
-                  selectedSkills.has(Number(work.work_type_id)) ? "checked" : ""
-                }>
-                <span>${esc(work.name)}</span>
-              </label>`
-              )
-              .join("")}
+        <div class="app-field app-field-full skill-picker">
+          <div class="skill-picker-header">
+            <div>
+              <div class="skill-picker-title">Виды работ</div>
+              <p>Отметьте работы, которые сотрудник умеет выполнять.</p>
+            </div>
+            <div class="skill-picker-actions">
+              <button type="button" class="skill-picker-button" id="selectAllEmployeeSkills" ${options.workTypes.length ? "" : "disabled"}>Выбрать все</button>
+              <button type="button" class="skill-picker-button skill-picker-button-muted" id="clearEmployeeSkills" ${options.workTypes.length ? "" : "disabled"}>Снять выбор</button>
+            </div>
           </div>
+          <div class="skill-list" role="group" aria-label="Доступные виды работ">
+            ${options.workTypes.length
+              ? options.workTypes.map((work) => `
+              <label class="skill-option ${selectedSkills.has(Number(work.work_type_id)) ? "is-selected" : ""}">
+                <input type="checkbox" name="work_type_ids" value="${Number(work.work_type_id)}" ${selectedSkills.has(Number(work.work_type_id)) ? "checked" : ""}>
+                <span class="skill-option-name">${esc(work.name)}</span>
+              </label>`).join("")
+              : '<p class="skill-picker-empty">Виды работ пока не созданы. Добавьте их в разделе «Работы».</p>'}
+          </div>
+          <div class="skill-picker-footer" id="employeeSkillCount" aria-live="polite"></div>
         </div>
       </div>
       <div class="app-modal-note">Автоматическое назначение заказа учитывает только активных сотрудников, у которых есть навыки для всех работ этого заказа. Сотрудник без выбранных навыков не будет автоматически назначаться.</div>
@@ -117,6 +121,25 @@ async function openEmployeeModal(employeeId = null) {
     body
   );
   const form = modal.querySelector("#employeeEditorForm");
+  const skillBoxes = [...form.querySelectorAll('input[name="work_type_ids"]')];
+  const skillCount = form.querySelector("#employeeSkillCount");
+  const syncSkills = () => {
+    const checkedCount = skillBoxes.filter((box) => box.checked).length;
+    skillCount.textContent = `Выбрано ${checkedCount} из ${skillBoxes.length}`;
+    skillBoxes.forEach((box) => {
+      box.closest(".skill-option").classList.toggle("is-selected", box.checked);
+    });
+  };
+  form.querySelector("#selectAllEmployeeSkills").addEventListener("click", () => {
+    skillBoxes.forEach((box) => { box.checked = true; });
+    syncSkills();
+  });
+  form.querySelector("#clearEmployeeSkills").addEventListener("click", () => {
+    skillBoxes.forEach((box) => { box.checked = false; });
+    syncSkills();
+  });
+  skillBoxes.forEach((box) => box.addEventListener("change", syncSkills));
+  syncSkills();
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector('button[type="submit"]');
@@ -144,13 +167,7 @@ async function openEmployeeModal(employeeId = null) {
       modal.remove();
       await render();
       if (result.account_created) {
-        alert(
-          "Учётная запись сотрудника создана. Временный пароль: qwerty1234."
-        );
-      } else if (!employee) {
-        alert(
-          "Сотрудник добавлен. Доступ создан автоматически. Временный пароль: qwerty1234."
-        );
+        alert(`Сотрудник добавлен, доступ создан администратором.\nЛогин: ${payload.email}\nВременный пароль: ${result.temporary_password}\nСохраните его и передайте сотруднику. Пароль можно изменить в личном кабинете.`);
       }
     } catch (error) {
       errorBox.textContent = error.message;

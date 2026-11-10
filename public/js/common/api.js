@@ -27,7 +27,7 @@
     const data = await response.json().catch(() => ({}));
 
     if (response.status === 401 && ["admin", "client", "employee"].includes(scope)) {
-      const loginPath = scope === "admin" ? "/admin/login" : `/${scope}/login`;
+      const loginPath = scope === "client" ? "/client/login" : "/staff/login";
       if (location.pathname !== loginPath) location.assign(loginPath);
     }
     if (!response.ok) throw new Error(data.error || `Ошибка запроса: ${response.status}`);

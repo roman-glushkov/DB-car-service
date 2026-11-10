@@ -67,22 +67,20 @@ function ensureUpgradeStyles() {
     .app-field{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:11px;font-weight:700;color:#4a5c51}
     .app-field-full{grid-column:1/-1}
     .app-field input,.app-field select,.app-field textarea{width:100%;border:1px solid #dfe6df;border-radius:8px;padding:10px 11px;background:#fff;color:#27372e;font:12px Inter,Arial,sans-serif;outline:none}
-    .app-field textarea{min-height:80px;resize:vertical}
+    .app-field-hint{font-size:10px;color:#718078;line-height:1.45}.app-field textarea{min-height:80px;resize:vertical}
     .app-field input:focus,.app-field select:focus,.app-field textarea:focus{border-color:#a3bc36;box-shadow:0 0 0 3px rgba(217,243,74,.2)}
     .app-modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:16px;border-top:1px solid #edf0ed}
     .app-modal-note{background:#f6f8f2;padding:11px 13px;border-radius:9px;color:#68776c;font-size:11px;line-height:1.5;margin:12px 0}
     .work-lines{display:grid;gap:8px}
     .work-line{display:grid;grid-template-columns:minmax(0,1fr) 90px 34px;gap:8px;align-items:center}
-    .work-line select,.work-line input{width:100%;border:1px solid #dfe6df;border-radius:8px;padding:9px;background:#fff;font:12px Inter,Arial,sans-serif}
+    .work-quantity-field{display:flex;flex-direction:column;gap:3px;font-size:10px;color:#6d7b6f;font-weight:600}.work-line select,.work-line input{width:100%;border:1px solid #dfe6df;border-radius:8px;padding:9px;background:#fff;font:12px Inter,Arial,sans-serif}
     .work-line-remove{height:34px;border:0;border-radius:8px;background:#fbeeea;color:#a84c37;font-weight:800}
-    .skill-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:5px}
-    .skill-option{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #e5ebe4;border-radius:8px;font-size:11px;color:#425247;font-weight:500}
     .status.s-muted{background:#edf0ed;color:#7d8980}
     .history-list{display:grid;gap:9px;margin-top:12px}
     .history-item{border-left:2px solid #d9f34a;padding:3px 0 3px 11px;font-size:11px;color:#3f5045}
     .history-item small{display:block;color:#89968d;margin-top:4px}
     .modal-error{background:#fff0ed;border:1px solid #f2c8be;color:#8c3e2d;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:11px}
-    @media(max-width:620px){.app-modal{padding:18px}.app-form-grid{grid-template-columns:1fr}.app-field-full{grid-column:auto}.skill-list{grid-template-columns:1fr}.work-line{grid-template-columns:minmax(0,1fr) 74px 32px}.page-actions{width:100%}.page-head{align-items:flex-start;flex-direction:column}}
+    @media(max-width:620px){.app-modal{padding:18px}.app-form-grid{grid-template-columns:1fr}.app-field-full{grid-column:auto}.work-line{grid-template-columns:minmax(0,1fr) 74px 32px}.page-actions{width:100%}.page-head{align-items:flex-start;flex-direction:column}}
   `;
   document.head.append(style);
 }
@@ -156,9 +154,9 @@ function workLineHtml(workTypes, item = {}) {
         workTypes,
         item.work_type_id
       )}</select>
-      <input data-work-quantity type="number" min="0.1" max="100" step="0.1" value="${esc(
+      <label class="work-quantity-field"><span>Кол-во</span><input data-work-quantity type="number" min="0.1" max="100" step="0.1" value="${esc(
         item.quantity ?? 1
-      )}" aria-label="Количество">
+      )}" aria-label="Количество работ"></label>
       <button class="work-line-remove" type="button" data-remove-work aria-label="Удалить работу">×</button>
     </div>`;
 }

@@ -1,3 +1,4 @@
+const crypto = require("node:crypto");
 const express = require("express");
 const router = express.Router();
 const { pool, query } = require("../../config/db");
@@ -45,6 +46,7 @@ async function saveEmployee(req, res, employeeId = null) {
 
     let id = employeeId;
     let accountCreated = false;
+    let temporaryPassword = null;
     if (id) {
       const existing = await conn.query(
         "SELECT employee_id FROM employees WHERE employee_id = ? FOR UPDATE",
@@ -66,10 +68,11 @@ async function saveEmployee(req, res, employeeId = null) {
           [email, fullName, id]
         );
       } else {
+        temporaryPassword = crypto.randomBytes(18).toString("base64url");
         await conn.query(
           `INSERT INTO user_accounts (email, password_hash, role, display_name, employee_id)
            VALUES (?, ?, 'employee', ?, ?)`,
-          [email, hashPassword("qwerty1234"), fullName, id]
+          [email, hashPassword(temporaryPassword), fullName, id]
         );
         accountCreated = true;
       }
@@ -79,10 +82,11 @@ async function saveEmployee(req, res, employeeId = null) {
         [fullName, position, phone, isActive]
       );
       id = Number(result.insertId);
+      temporaryPassword = crypto.randomBytes(18).toString("base64url");
       await conn.query(
         `INSERT INTO user_accounts (email, password_hash, role, display_name, employee_id)
          VALUES (?, ?, 'employee', ?, ?)`,
-        [email, hashPassword("qwerty1234"), fullName, id]
+        [email, hashPassword(temporaryPassword), fullName, id]
       );
       accountCreated = true;
     }
@@ -102,7 +106,7 @@ async function saveEmployee(req, res, employeeId = null) {
       ok: true,
       employee_id: id,
       account_created: accountCreated,
-      default_password: accountCreated ? "qwerty1234" : undefined,
+      temporary_password: accountCreated ? temporaryPassword : undefined,
     });
   } catch (error) {
     await conn.rollback();

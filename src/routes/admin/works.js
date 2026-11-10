@@ -87,4 +87,11 @@ router.patch(
   })
 );
 
+router.delete("/work-types/:id",route(async(req,res)=>{
+ const id=positiveId(req.params.id,"вида работы");
+ const used=await query("SELECT order_work_id FROM order_works WHERE work_type_id=? LIMIT 1",[id]);
+ if(used.length)throw httpError(409,"Работа используется в заказах, удаление запрещено.");
+ const r=await query("DELETE FROM work_types WHERE work_type_id=?",[id]);
+ if(!r.affectedRows)throw httpError(404,"Работа не найдена.");res.json({ok:true});
+}));
 module.exports = router;

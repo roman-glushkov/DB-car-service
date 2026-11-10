@@ -174,15 +174,7 @@ function renderOrders(filter) {
       ? "Активные заказы"
       : "Все мои заказы"
   }</h1><p>Открывайте заказ, чтобы обновить статус или добавить результат диагностики.</p></div>
-    <div class="portal-filter"><button class="${
-      filter === "active" ? "active" : ""
-    }" data-filter="active">Активные</button><button class="${
-    filter === "upcoming" ? "active" : ""
-  }" data-filter="upcoming">Предстоящие</button><button class="${
-    filter === "completed" ? "active" : ""
-  }" data-filter="completed">Готовые</button><button class="${
-    filter === "all" ? "active" : ""
-  }" data-filter="all">Все</button></div></div>
+</div>
     ${
       filtered.length
         ? `<div class="portal-grid">${filtered.map(orderCard).join("")}</div>`
@@ -453,12 +445,7 @@ document.getElementById("content").addEventListener("click", (event) => {
     return;
   }
   const orderButton = event.target.closest("[data-edit-order]");
-  const filterButton = event.target.closest("[data-filter]");
   if (orderButton) openOrderEditor(Number(orderButton.dataset.editOrder));
-  if (filterButton) {
-    state.tab = filterButton.dataset.filter;
-    render();
-  }
 });
 
 document

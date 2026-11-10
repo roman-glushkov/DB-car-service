@@ -13,7 +13,7 @@ async function works() {
       }</td>
       <td><button class="action-btn" data-action="edit-work" data-id="${Number(
         item.work_type_id
-      )}">Редактировать</button></td>
+      )}">Редактировать</button><button class="action-btn" data-action="delete-record" data-kind="work-types" data-id="${Number(item.work_type_id)}">Удалить</button></td>
     </tr>`
     )
     .join("");

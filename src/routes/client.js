@@ -114,7 +114,7 @@ router.post(
       throw httpError(400, "Укажите марку и модель автомобиля.");
     if (
       year !== null &&
-      (!Number.isInteger(year) || year < 1886 || year > 2100)
+      (!Number.isInteger(year) || year < 1886 || year > new Date().getFullYear() + 1)
     ) {
       throw httpError(400, "Укажите корректный год выпуска.");
     }

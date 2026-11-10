@@ -106,3 +106,27 @@ document.getElementById("content").addEventListener("click", (event) => {
   }
 });
 
+
+// Сортировка щелчком по заголовку: текст, сумма, дата, числа.
+const sortState = {column:-1,ascending:true};
+document.getElementById('content').addEventListener('click',event=>{
+  const header=event.target.closest('.data-table thead th');
+  if(!header)return;
+  const table=header.closest('table'), tbody=table?.querySelector('tbody');
+  if(!tbody)return;
+  const headers=[...header.parentElement.children],column=headers.indexOf(header);
+  if(column<0)return;
+  sortState.ascending=sortState.column===column?!sortState.ascending:true;
+  sortState.column=column;
+  const rows=[...tbody.querySelectorAll('tr[data-search]')];
+  const collator=new Intl.Collator('ru',{numeric:true,sensitivity:'base'});
+  rows.sort((a,b)=>{
+    const va=(a.children[column]?.textContent||'').trim(), vb=(b.children[column]?.textContent||'').trim();
+    return (sortState.ascending?1:-1)*collator.compare(va,vb);
+  });
+  if(table.closest('.page')?.querySelector('#tablePagination')){orderRowsCache=rows;ordersPage=1;}
+  tbody.replaceChildren(...rows);
+  applyTableFilters();
+  headers.forEach(h=>{h.removeAttribute('aria-sort');h.style.cursor='pointer';});
+  header.setAttribute('aria-sort',sortState.ascending?'ascending':'descending');
+});

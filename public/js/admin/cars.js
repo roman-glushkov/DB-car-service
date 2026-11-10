@@ -27,7 +27,10 @@ async function cars() {
       <td>${esc(item.year || "—")}</td>
       <td>${item.mileage != null ? `${esc(item.mileage)} км` : "—"}</td>
       <td>${esc(item.client_name)}</td>
-      <td><label class="action-btn">Фото<input type="file" accept="image/jpeg,image/png,image/webp" data-car-photo="${Number(
+      <td><button class="action-btn" data-action="edit-car" data-id="${Number(item.car_id)}">Изменить</button>
+      <button class="action-btn" data-action="delete-record" data-kind="cars" data-id="${Number(item.car_id)}">Удалить</button>
+      ${item.photo_path ? `<button class="action-btn" data-action="remove-photo" data-id="${Number(item.car_id)}">Убрать фото</button>` : ""}
+      <label class="action-btn">Фото<input type="file" accept="image/jpeg,image/png,image/webp" data-car-photo="${Number(
         item.car_id
       )}" hidden></label></td>
     </tr>`
@@ -36,10 +39,10 @@ async function cars() {
 
   return page(
     "Машины",
-    ["Автомобиль", "Госномер", "Год", "Последний пробег", "Владелец", "Фото"],
+    ["Автомобиль", "Госномер", "Год", "Последний пробег", "Владелец", "Действия"],
     rows,
-    "",
-    tableTools("Поиск по марке, VIN или госномеру")
+    '<button class="action-btn action-btn-primary" data-action="create-car">+ Добавить машину</button>',
+    tableTools("Поиск по модели, VIN, госномеру, марке или владельцу")
   );
 }
 

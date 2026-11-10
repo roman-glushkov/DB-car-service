@@ -880,3 +880,5 @@ button {
   font-size: 9px;
   line-height: 1.55;
 }
+
+.photo-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:104px;width:100%;border:1px solid #dde7dc;background:linear-gradient(145deg,#edf3e9,#f8faf5);border-radius:12px;color:#697d6c;text-align:center;padding:12px;box-sizing:border-box}.photo-fallback-icon{font-size:30px;line-height:1}.photo-fallback small{font-size:11px;font-weight:700}.photo-fallback-thumb{width:54px;min-height:46px;padding:3px;gap:0;border-radius:8px}.photo-fallback-thumb .photo-fallback-icon{font-size:21px}.photo-fallback-thumb small{display:none}

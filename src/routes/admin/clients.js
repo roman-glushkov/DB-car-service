@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { pool, query } = require("../../config/db");
 const { hashPassword } = require("../../utils/passwords");
-const { httpError, route, cleanText } = require("../../utils/validators");
+const { httpError, route, cleanText, positiveId } = require("../../utils/validators");
+const { phone, email, text } = require("../../utils/record-validation");
 
 router.post(
   "/clients",
@@ -57,4 +58,23 @@ router.get(
   })
 );
 
+router.put("/clients/:id",route(async(req,res)=>{
+ const id=positiveId(req.params.id,"клиента"), b=req.body || {};
+ const fullName=text(b.full_name,"ФИО",150), contactPhone=phone(b.phone), contactEmail=email(b.email,true);
+ const conn=await pool.getConnection();try{await conn.beginTransaction();
+ const r=await conn.query("UPDATE clients SET full_name=?,phone=?,email=? WHERE client_id=?",[fullName,contactPhone,contactEmail,id]);
+ if(!r.affectedRows)throw httpError(404,"Клиент не найден.");
+ await conn.query("UPDATE user_accounts SET email=?,display_name=? WHERE client_id=?",[contactEmail,fullName,id]);
+ await conn.commit();res.json({ok:true});}catch(error){await conn.rollback();throw error;}finally{conn.release();}
+}));
+router.delete("/clients/:id",route(async(req,res)=>{
+ const id=positiveId(req.params.id,"клиента");
+ const cars=await query("SELECT car_id FROM cars WHERE client_id=? LIMIT 1",[id]);
+ if(cars.length)throw httpError(409,"Сначала необходимо разрешить вопрос с автомобилями клиента; история заказов не удаляется.");
+ const conn=await pool.getConnection();try{await conn.beginTransaction();
+ await conn.query("DELETE FROM user_accounts WHERE client_id=?",[id]);
+ const r=await conn.query("DELETE FROM clients WHERE client_id=?",[id]);
+ if(!r.affectedRows)throw httpError(404,"Клиент не найден.");await conn.commit();res.json({ok:true});
+ }catch(error){await conn.rollback();throw error;}finally{conn.release();}
+}));
 module.exports = router;

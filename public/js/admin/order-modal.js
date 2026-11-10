@@ -4,9 +4,7 @@ async function openOrderModal(orderId = null) {
     orderId ? api(`/api/orders/${orderId}`) : Promise.resolve(null),
   ]);
   const order = detail?.order || null;
-  const activeEmployees = options.employees.filter((employee) =>
-    Number(employee.is_active)
-  );
+  const activeEmployees = options.employees.filter((employee) => Number(employee.is_active));
   if (!orderId && !options.cars.length) {
     alert(
       "В базе пока нет автомобилей. Сначала добавьте автомобиль в таблицу cars и привяжите его к клиенту."
@@ -86,11 +84,12 @@ async function openOrderModal(orderId = null) {
           </label>`
         }
         <label class="app-field">Ответственный сотрудник
-          <select name="employee_id">${employeeOptions(
+          <select name="employee_id" id="eligibleEmployeeSelect">${employeeOptions(
             options.employees,
             order?.employee_id ?? "",
             create
           )}</select>
+          <small id="employeeSkillHint" class="app-field-hint"></small>
         </label>
         <label class="app-field">Плановая дата завершения
           <input name="planned_finish_date" type="date" value="${esc(
@@ -162,6 +161,37 @@ async function openOrderModal(orderId = null) {
 
   const form = modal.querySelector("#orderEditorForm");
   const workLines = modal.querySelector("#workLines");
+  const masterSelect = modal.querySelector("#eligibleEmployeeSelect");
+  const skillHint = modal.querySelector("#employeeSkillHint");
+  const requiredSkills = () => create
+    ? [...new Set([...workLines.querySelectorAll("[data-work-type]")].map((node) => Number(node.value)))]
+    : [...new Set(detail.works.map((item) => Number(item.work_type_id)))];
+  function updateEligibleEmployees() {
+    const skills = requiredSkills();
+    const eligible = activeEmployees.filter((employee) => {
+      const owned = new Set(String(employee.skill_ids || "").split(",").map(Number));
+      return skills.every((id) => owned.has(id));
+    });
+    const previous = masterSelect.value;
+    masterSelect.innerHTML = eligible.map((employee) =>
+      `<option value="${Number(employee.employee_id)}">${esc(employee.full_name)} · ${esc(employee.position)}</option>`
+    ).join("") + (eligible.length
+      ? '<option value="">Подобрать автоматически по загрузке</option>'
+      : '<option value="" disabled selected>Нет подходящих мастеров</option>');
+    if (previous && eligible.some((employee) => String(employee.employee_id) === previous)) masterSelect.value = previous;
+    else if (!create && eligible.some((employee) => Number(employee.employee_id) === Number(order?.employee_id))) masterSelect.value = String(order.employee_id);
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit) submit.disabled = !eligible.length;
+    skillHint.textContent = eligible.length
+      ? `Доступно мастеров с нужными навыками: ${eligible.length}`
+      : 'Нет мастеров со всеми выбранными навыками. Настройте навыки сотрудников либо измените работы.';
+    skillHint.style.color = eligible.length ? '' : '#aa493c';
+    // Без квалифицированного мастера заказ не отправляем.
+  }
+  workLines?.addEventListener("change", (event) => {
+    if (event.target.closest("[data-work-type]")) updateEligibleEmployees();
+  });
+  updateEligibleEmployees();
   modal.querySelector("#addWorkLine")?.addEventListener("click", () => {
     workLines.insertAdjacentHTML(
       "beforeend",
@@ -170,6 +200,7 @@ async function openOrderModal(orderId = null) {
         quantity: 1,
       })
     );
+    updateEligibleEmployees();
   });
   modal.addEventListener("click", (event) => {
     const removeButton = event.target.closest("[data-remove-work]");
@@ -180,6 +211,7 @@ async function openOrderModal(orderId = null) {
       return;
     }
     removeButton.closest("[data-work-row]").remove();
+    updateEligibleEmployees();
   });
 
   form.addEventListener("submit", async (event) => {

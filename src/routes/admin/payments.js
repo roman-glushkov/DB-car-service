@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { query } = require("../../config/db");
+const { httpError, positiveId } = require("../../utils/validators");
+const { number } = require("../../utils/record-validation");
 const { route } = require("../../utils/validators");
 
 router.get(
@@ -82,4 +84,19 @@ router.get(
   })
 );
 
+router.post("/payments", route(async (req,res)=>{
+  const orderId=positiveId(req.body?.order_id,"заказа");
+  const amount=number(req.body?.amount,"Сумма оплаты",{min:0.01,max:99999999});
+  const method=String(req.body?.payment_method || "").trim();
+  if(!["Наличные","Карта","Перевод"].includes(method))throw httpError(400,"Выберите способ оплаты.");
+  const orders=await query("SELECT order_id FROM orders WHERE order_id=?",[orderId]);
+  if(!orders.length)throw httpError(404,"Заказ не найден.");
+  const r=await query("INSERT INTO payments (order_id,amount,payment_method) VALUES (?,?,?)",[orderId,amount,method]);
+  res.status(201).json({ok:true,payment_id:Number(r.insertId)});
+}));
+router.delete("/payments/:id",route(async(req,res)=>{
+  const id=positiveId(req.params.id,"оплаты");
+  const r=await query("DELETE FROM payments WHERE payment_id=?",[id]);
+  if(!r.affectedRows)throw httpError(404,"Оплата не найдена.");res.json({ok:true});
+}));
 module.exports = router;

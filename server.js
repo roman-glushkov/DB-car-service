@@ -23,7 +23,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api", (_req, res) => res.status(404).json({ error: "API-маршрут не найден." }));
 
 app.get("/", (_req, res) => res.redirect("/login"));
-app.get(["/login", "/login.html", "/admin/login", "/client/login", "/employee/login"], sendPage("login.html"));
+app.get(["/login", "/login.html", "/admin/login", "/client/login", "/employee/login", "/staff/login"], sendPage("login.html"));
 app.get(["/admin", "/admin.html", "/index.html"], requirePageRole("admin"), sendPage("admin.html"));
 app.get(["/client", "/client.html"], requirePageRole("client"), sendPage("client.html"));
 app.get(["/employee", "/employee.html"], requirePageRole("employee"), sendPage("employee.html"));

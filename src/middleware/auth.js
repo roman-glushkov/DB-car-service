@@ -135,11 +135,11 @@ function requirePageRole(role) {
   return async (req, res, next) => {
     try {
       const user = await getSessionUser(req);
-      if (!user) return res.redirect(`/${role}/login`);
+      if (!user) return res.redirect(role === "client" ? "/client/login" : "/staff/login");
       if (user.role !== role)
         return res.redirect(ROLE_PATHS[user.role] || "/login");
       if (user.role === "employee" && !Number(user.employee_active))
-        return res.redirect("/employee/login");
+        return res.redirect("/staff/login");
       req.user = user;
       next();
     } catch (error) {
